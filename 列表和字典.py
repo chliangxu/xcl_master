@@ -12,6 +12,9 @@ class first_main:
         # # 2.2:步数为负 (开始是第一位， 结束是第二位)
         print(first_main.list_three(self, list))
 
+        # 3.排序（排序推荐用sorted函数，reverse=True是降序，不加上是升序）
+        print(first_main.list_dict(self, list))
+
         return False
 
     def list_fir(self):
@@ -41,6 +44,12 @@ class first_main:
         dict_list_three["new_three_get_num"] = new_three_get_num
 
         return dict_list_three
+
+    def list_dict(self, list):
+        staus_list = [{'name':'mike','age':'19'},{'name':'peter','age':'20'},{'name':'lily','age':'18'}]
+        print(type(staus_list))
+        print(sorted(list))
+        print("按年龄排序", sorted(staus_list, key=lambda x: x['age'], reverse=True))
 
     def first_dict(self):
         # 1.字典推导式
