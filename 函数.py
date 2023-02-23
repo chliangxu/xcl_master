@@ -1,3 +1,5 @@
+import os
+
 class Func:
 
     def new_func(self):
@@ -18,4 +20,21 @@ class Func:
         pass
 
 
-Func().new_func()
+# Func().new_func()
+
+
+def get_work_path():
+    working_dir = os.getcwd()
+    work_path = os.path.join(working_dir, "stiff")
+    if not os.path.exists(work_path):
+        os.mkdir(work_path)
+        print("old_work_path", type(work_path), work_path)
+    return work_path
+    # return work_path
+
+def get_path():
+    print(get_work_path())
+    work_path = os.path.join(get_work_path(), "new")
+    print("111", work_path)
+
+print(get_path())
