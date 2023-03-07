@@ -32,4 +32,5 @@ class delete_floder:
                 return "%.2f%s" % (size, units[i])
             size = size / sizes
 
-delete_floder().getLocalSpace("D:\\")
+
+print(delete_floder().getLocalSpace("D:\\"))
