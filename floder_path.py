@@ -32,5 +32,34 @@ class delete_floder:
                 return "%.2f%s" % (size, units[i])
             size = size / sizes
 
+    def get_dictory_size(self, floder):
+        """
+        获取某个目录的大小
+        :param floder: 目录名称 ：”E:\\GNGame“
+        :return: 剩余单位：MB
+        """
+        # 本函数是获取目录的大小
+        # getsize是获取单个文件的大小
+        catalogue_size = 0
+        doc_list = os.listdir(floder)
+        for doc in doc_list:
+            if os.path.isfile(os.path.join(floder, doc)):
+                catalogue_size += os.path.getsize(os.path.join(floder, doc))
 
-print(delete_floder().getLocalSpace("D:\\"))
+            if os.path.isdir(os.path.join(floder, doc)):
+                catalogue_size += self.get_dictory_size(os.path.join(floder, doc))
+
+        return catalogue_size
+
+
+    def get_finally(self, floder):
+        len_floder = len(os.listdir(floder))
+        if len_floder == 0:
+            # 盘符的大小
+            self.getLocalSpace(floder)
+
+        else:
+            # 目录的大小
+            print(self.convert_size(self.get_dictory_size(floder)))
+
+delete_floder().get_finally(r"E:\xcl\xcl_master")
