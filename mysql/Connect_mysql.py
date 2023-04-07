@@ -40,14 +40,35 @@ class MySql(object):
         else:
             return False
 
-
 class Table(object):
     def __init__(self, db, table_name, db_name):
         self.db = db
         self.table = table_name
         self.db_name = db_name
-        # self.filename = self._field(self.db_name, self.table)
+        self.filename = self._field(self.db_name, self.table)
 
+
+
+    def get_table_list(self, table_name, list_name):
+        """
+        返回数据库中的某一个表中的所有种类
+        :param table_name: 表名
+        :param list_name: 列名
+        :return:
+        """
+        sql = f"select {list_name},count(*) from {table_name} group by {list_name} limit 20;"
+        print("[SQL-sentence]:", sql)
+        cursor = self.db.cursor()
+        cursor.execute(sql)
+        slet = cursor.fetchall()
+        print("11", slet, type(slet))
+        # 给数据处理成键值对，然后返回
+        # dc = {}
+        # for i in slet:
+        #     for j in range(len(i)):
+        #         dc[fields[j]] = i[j]
+        # result = dc
+        # return result
 
     def select(self, arr):
         sql = isql(arr)
@@ -69,15 +90,50 @@ class Table(object):
         result = dc
         return result
 
+    def _field(self, dbname, tablename):
+        # 获取表结构
+        sql = "select  table_name,column_name,column_comment  from " \
+              f"information_schema.columns where table_schema ='{dbname}'  and table_name = '{tablename}';"
+        cursor = self.db.cursor()
+        try:
+            cursor.execute(sql)
+        except:
+            raise ValueError(f"Please confirm {dbname},{tablename} does it exist.")
+        key = cursor.fetchall()
+        return key
+
+
 def isql(arr):
+    # 处理sql语句，并组装成相应sql执行语句
     sql, op = "", 0
     for ar in arr:
         if type(ar) is str:
             kl = ar
-            if op < len(arr) - 1:
+            if op < len(arr)-1:
                 sql = sql + f"{kl}" + " and "
             else:
                 sql = sql + kl
-                print("111", sql)
+        else:
+            if len(ar) != 2:
+                raise ValueError(f"{ar},非法格式")
+            try:
+                ar["op"]
+            except:
+                print(f"{ar}, 格式非法，请输入操作符‘op’。")
+            kl, k = "", 0
+            # 处理字符类型是否加单引号
+            for ke in ar.keys():
+                if ke != 'op' and type(ar[ke]) is int:
+                    kl = f"{ke}{ar['op']}{ar[ke]}"
+                elif ke != 'op':
+                    kl = f"{ke}{ar['op']}'{ar[ke]}'"
+                    print(kl)
+                k += 1
+            if op < len(arr)-1:
+                sql = sql + f"{kl}" + " and "
+            else:
+                sql = sql + kl
+        op += 1
+    return sql
 
 
