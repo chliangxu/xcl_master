@@ -3,14 +3,34 @@ from flask import Flask, request
 # 1.创建Flask项目的应用对象
 # __name__作用：当前py文件所在的目录是Flask项目目录，会在项目目录下寻找静态文件夹[图片 css]，模板文件夹[html]
 app = Flask(__name__)
+"""
+DEFAULT_CONVERTERS = {
+    "default": UnicodeConverter,
+    "string": UnicodeConverter,
+    "any": AnyConverter,
+    "path": PathConverter,
+    "int": IntegerConverter,
+    "float": FloatConverter,
+    "uuid": UUIDConverter,
+    # 自定义一个键值对
+    "mobile": PhoneConverter,
+}
+"""
 
+from werkzeug.routing import BaseConverter
 
-# 2.定义视图函数，绑定路由信息
-# http://127.0.0.1:5000
-# 默认支持：GET HEAD OPTIONS
-@app.route('/')
-def helloworld():
-    return "hello world 6666"
+# 1.自定义转换器类继承于BaseConverter
+class PhoneConverter(BaseConverter):
+    # 2.重写父类的regex属性，将正则表达式给予其赋值
+    # 注意点：不能加^匹配开头
+    regex = "1[3-9]\d{9}$"
+
+# 3.将自定义的转换器类注册到默认的转换器字典中
+app.url_map.converters["mobile"] = PhoneConverter
+
+@app.route('/mobile/<mobile:phone>')
+def helloworld(phone):
+    return "hello world {}".format(phone)
 
 
 # 3.运行Flask项目

@@ -1,5 +1,10 @@
-任务
-1.了解数据库的查询操作
-2.思考跟数据库的交互
-3.可视化界面的继续深度学习
+property的详细介绍
+https://blog.csdn.net/m0_57133702/article/details/120572877
 
+1. 生成 requirements.txt
+
+pip freeze  > requirements.txt
+
+2. 使用requirements安装包
+
+pip install -r requirements.txt
