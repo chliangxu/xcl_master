@@ -2,202 +2,185 @@ import os
 from threading import Thread
 
 
-def mstsc_link(host, user, password):
-    os.system(r'cmdkey /generic:termsrv/%s /user:%s /pass:%s' % (host, user, password))
-    os.popen(r'mstsc /noConsentPrompt /v:%s /admin /w 2200 /h 1200' % (host))
+class remote_computer:
 
+    def __init__(self):
+        self.user = "administrator"
+        self.first_password = "GNGame@202212"
+        self.two_password = "APGame@2022"
 
-def switch_computer(index):
-
-    if index == 31:
-        print('host_gn_ds')
-        mstsc_link("9.30.17.241", "administrator", "GNGame@202212")
-    elif index == 32:
-        print('host_gn_android')
-        mstsc_link("9.30.18.100", "administrator", "GNGame@202212")
-    elif index == 33:
-        print('host_gn_editor')
-        mstsc_link("9.30.18.126", "administrator", "GNGame@202212")
-    elif index == 34:
-        print('host_gn_win')
-        mstsc_link("9.30.18.101", "administrator", "GNGame@202212")
-    elif index == 35:
-        print('host_gn_win')
-        mstsc_link("9.19.177.28", "administrator", "GNGame@202212")
-
-    elif index == 36:
-        print('host_gn_ce_android')
-        mstsc_link("9.30.19.144", "administrator", "GNGame@202212")
-    elif index == 37:
-        # print('host_gn_ce_android')
-        mstsc_link("9.19.177.35", "administrator", "GNGame@202212")
-    elif index == 38:
-        print('host_gn_ce_ds')
-        mstsc_link("9.30.18.80", "administrator", "GNGame@202212")
-    elif index == 39:
-        print('host_gn_ce_editor')
-        mstsc_link("9.30.18.126", "administrator", "GNGame@202212")
-    elif index == 40:
-        # print('host_gn_ce_editor')
-        mstsc_link("9.30.18.93", "administrator", "GNGame@202212")
-    elif index == 41:
-        mstsc_link("9.30.4.182", "administrator", "APGame@2022")    #PC104
-    elif index == 42:
-        mstsc_link("9.30.8.173", "administrator", "GNGame@202212")
-    elif index == 43:
-        mstsc_link("9.30.19.76", "administrator", "HPGame_2022")
-    elif index == 44:
-        mstsc_link("9.30.10.151", "administrator", "GNGame@202212")
-    elif index == 45:
-        mstsc_link("9.19.177.32", "administrator", "GNGame@202212")
-    elif index == 46:
-        mstsc_link("9.19.177.32", "administrator", "GNGame@202212")
-    elif index == 47:
-        mstsc_link("9.30.17.241", "administrator", "GNGame@202212")
-    elif index == 48:
-        mstsc_link("9.30.17.216", "administrator", "GNGame@202212")
-    elif index == 49:
-        mstsc_link("9.30.19.165", "administrator", "GNGame@202212")
-    elif index == 50:
-        mstsc_link("9.30.18.26", "administrator", "GNGame@202212")
-    elif index == 51:
-        mstsc_link("9.19.177.28", "administrator", "GNGame@202212")
-    elif index == 52:
-        mstsc_link("9.30.4.153", "administrator", "APGame@2022")
-    elif index == 53:
-        mstsc_link("9.30.4.61", "administrator", "APGame@2022")
-    elif index == 54:
-        mstsc_link("9.19.176.248", "administrator", "APGame@2022")
-
-# 9.30.18.100
-    elif index == 100:
-        print('trunk_ugc_all')
-        t = Thread(target=mstsc_link, args=(host_trunk_ugc_cook, user_computer, password_computer))
-        t1 = Thread(target=mstsc_link, args=(host_trunk_ugc_editor, user_computer, password_computer))
-        t2 = Thread(target=mstsc_link, args=(host_trunk_ugc_ds_dev, user_computer, password_computer))
-        t3 = Thread(target=mstsc_link, args=(host_trunk_ugc_win, user_computer, password_computer))
-        t.start()
-        t1.start()
-        t2.start()
-        t3.start()
-    elif index == 101:
-        print('cg16_ugc_all')
-        t = Thread(target=mstsc_link, args=(host_cg16_ugc_cook, user_computer, password_computer))
-        t1 = Thread(target=mstsc_link, args=(host_cg16_ugc_editor, user_computer, password_branch_computer))
-        t2 = Thread(target=mstsc_link, args=(host_cg16_ugc_new_pie_ds, user_computer, password_computer))
-        t3 = Thread(target=mstsc_link, args=(host_cg16_ugc_win, user_computer, password_branch_computer))
-        t4 = Thread(target=mstsc_link, args=(host_cg16_ugc_android, user_computer, password_branch_computer))
-        t5 = Thread(target=mstsc_link, args=(host_cg16_ds_dev, user_computer, password_computer))
-        t.start()
-        t1.start()
-        t2.start()
-        t3.start()
-        t4.start()
-        t5.start()
-
-
-if __name__ == '__main__':
-    s = ""
-    input_index = int(input('输入对应远程构建机序号: '))
-    switch_computer(input_index)
-
-'''
-host_trunk_ugc_cook = '9.30.16.90'  # index == 1
-host_trunk_ugc_editor = '9.30.16.69'  # index == 2
-host_trunk_ugc_ds_dev = '9.30.0.58'  # index == 3
-host_trunk_ugc_win = '9.30.0.44'  # index == 4
-
-host_cg16_ugc_cook = '9.30.0.15'  # index == 5
-host_cg16_ugc_editor = '9.30.1.149'  # index == 6
-host_cg16_ugc_new_pie_ds = '9.30.0.151'  # index == 7
-host_cg16_ugc_win = '9.30.1.182'  # index == 8
-host_cg16_ugc_android = '9.30.1.244'  # index == 9
-host_cg16_ds_dev = '9.30.11.221'  # index == 10
-
-host_cg16_ugc_cook = '9.30.2.216'  # index == 11
-host_cg16_ugc_editor = '9.30.1.185'  # index == 12
-host_cg16_ugc_new_pie_ds = '9.30.0.151'  # index == 13
-host_cg16_ugc_win = '9.30.1.182'  # index == 14
-host_cg16_ugc_android = '9.30.0.185'  # index == 15
-host_cg16_ds_dev = '9.30.11.221'  # index == 10
-
-host_cg17_ugc_cook = '9.30.2.216'   # index == 11
-host_cg17_ugc_editor = '9.30.1.185'     # index == 12
-host_cg17_ugc_new_pie_ds = '9.30.0.151'  # index == 13
-host_cg17_ugc_win = '9.30.1.169'  # index == 14
-host_cg17_ugc_android = '9.30.0.185'    # index == 15
-host_cg17_ds_dev = '9.30.2.217'  # index == 16
-
-trunk_ugc_all index == 100
-cg16_ugc_all index == 101
-
-'''
-
-"""
     def mstsc_link(self, host, user, password):
         os.system(r'cmdkey /generic:termsrv/%s /user:%s /pass:%s' % (host, user, password))
         os.popen(r'mstsc /noConsentPrompt /v:%s /admin /w 2200 /h 1200' % (host))
 
     def switch_computer(self, index):
+        if index == 1:
+            self.mstsc_link("9.30.18.100", self.user, self.first_password)
 
-        if index == 31:
-            print('host_gn_ds')
-            self.mstsc_link("9.30.17.241", "administrator", "GNGame@202212")
+        elif index == 2:
+            self.mstsc_link("9.30.17.241", self.user, self.first_password)
+
+        elif index == 3:
+            self.mstsc_link("9.30.18.126", self.user, self.first_password)
+
+        elif index == 4:
+            self.mstsc_link("9.30.18.101", self.user, self.first_password)
+
+        elif index == 5:
+            self.mstsc_link("9.30.4.170", self.user, self.two_password)
+
+        elif index == 6:
+            self.mstsc_link("9.30.19.72", self.user, self.first_password)
+
+        elif index == 7:
+            self.mstsc_link("9.30.18.26", self.user, self.first_password)
+
+        elif index == 8:
+            self.mstsc_link("9.30.19.165", self.user, self.first_password)
+
+        elif index == 9:
+            self.mstsc_link("9.30.4.61", self.user, self.two_password)
+
+        elif index == 10:
+            self.mstsc_link("9.19.176.248", self.user, self.two_password)
+
+        elif index == 11:
+            self.mstsc_link("9.30.19.144", self.user, self.first_password)
+
+        elif index == 12:
+            self.mstsc_link("9.30.4.182", self.user, self.two_password)
+
+        elif index == 13:
+            self.mstsc_link("9.30.18.80", self.user, self.first_password)
+
+        elif index == 14:
+            self.mstsc_link("9.30.17.216", self.user, self.first_password)
+
+        elif index == 15:
+            self.mstsc_link("9.30.18.93", self.user, self.first_password)
+
+        elif index == 16:
+            self.mstsc_link("9.30.19.140", self.user, self.first_password)
+
+        elif index == 17:
+            self.mstsc_link("9.30.7.154", self.user, self.two_password)
+
+        elif index == 18:
+            self.mstsc_link("9.30.11.144", self.user, self.two_password)
+
+        elif index == 19:
+            self.mstsc_link("9.30.7.183", self.user, self.two_password)
+
+        elif index == 20:
+            self.mstsc_link("9.30.8.173", self.user, self.first_password)
+
+        elif index == 21:
+            self.mstsc_link("9.19.176.10", self.user, self.first_password)
+
+        elif index == 22:
+            self.mstsc_link("9.30.19.21", self.user, self.first_password)
+
+        elif index == 23:
+            self.mstsc_link("9.30.10.184", self.user, self.first_password)
+
+        elif index == 24:
+            self.mstsc_link("9.19.176.165", self.user, self.two_password)
+
+        elif index == 25:
+            self.mstsc_link("9.30.6.236", self.user, self.first_password)
+
+        elif index == 26:
+            self.mstsc_link("9.19.177.32", self.user, self.first_password)
+
+        elif index == 27:
+            self.mstsc_link("9.30.10.151", self.user, self.first_password)
+
+        elif index == 28:
+            self.mstsc_link("9.30.18.37", self.user, self.first_password)
+
+        elif index == 29:
+            self.mstsc_link("9.19.177.7", self.user, self.two_password)
+
+        elif index == 30:
+            self.mstsc_link("9.30.4.180", self.user, self.two_password)
+
+        elif index == 31:
+            self.mstsc_link("9.30.4.153", self.user, self.two_password)
+
         elif index == 32:
-            print('host_gn_android')
-            self.mstsc_link("9.30.18.100", "administrator", "GNGame@202212")
+            self.mstsc_link("9.19.177.28", self.user, self.first_password)
+
         elif index == 33:
-            print('host_gn_editor')
-            self.mstsc_link("9.30.18.126", "administrator", "GNGame@202212")
+            self.mstsc_link("9.19.177.3", self.user, self.first_password)
+
         elif index == 34:
-            print('host_gn_win')
-            self.mstsc_link("9.30.18.101", "administrator", "GNGame@202212")
+            self.mstsc_link("9.30.11.166", self.user, self.two_password)
+
         elif index == 35:
-            print('host_gn_win')
-            self.mstsc_link("9.19.177.28", "administrator", "GNGame@202212")
+            self.mstsc_link("9.30.17.134", self.user, self.first_password)
 
         elif index == 36:
-            print('host_gn_ce_android')
-            self.mstsc_link("9.30.19.144", "administrator", "GNGame@202212")
-        elif index == 37:
-            # print('host_gn_ce_android')
-            self.mstsc_link("9.19.177.35", "administrator", "GNGame@202212")
-        elif index == 38:
-            print('host_gn_ce_ds')
-            self.mstsc_link("9.30.18.80", "administrator", "GNGame@202212")
-        elif index == 39:
-            print('host_gn_ce_editor')
-            self.mstsc_link("9.30.18.126", "administrator", "GNGame@202212")
-        elif index == 40:
-            # print('host_gn_ce_editor')
-            self.mstsc_link("9.30.18.93", "administrator", "GNGame@202212")
-        elif index == 41:
-            self.mstsc_link("9.30.4.182", "administrator", "APGame@2022")  # PC104
-        elif index == 42:
-            self.mstsc_link("9.30.8.173", "administrator", "GNGame@202212")
-        elif index == 43:
-            self.mstsc_link("9.30.19.76", "administrator", "HPGame_2022")
-        elif index == 44:
-            self.mstsc_link("9.30.10.151", "administrator", "GNGame@202212")
-        elif index == 45:
-            self.mstsc_link("9.19.177.32", "administrator", "GNGame@202212")
-        elif index == 46:
-            self.mstsc_link("9.19.177.32", "administrator", "GNGame@202212")
-        elif index == 47:
-            self.mstsc_link("9.30.17.241", "administrator", "GNGame@202212")
-        elif index == 48:
-            self.mstsc_link("9.30.17.216", "administrator", "GNGame@202212")
-        elif index == 49:
-            self.mstsc_link("9.30.19.165", "administrator", "GNGame@202212")
-        elif index == 50:
-            self.mstsc_link("9.30.18.26", "administrator", "GNGame@202212")
-        elif index == 51:
-            self.mstsc_link("9.19.177.28", "administrator", "GNGame@202212")
-        elif index == 52:
-            self.mstsc_link("9.30.4.153", "administrator", "APGame@2022")
-        elif index == 53:
-            self.mstsc_link("9.30.4.61", "administrator", "APGame@2022")
-        elif index == 54:
-            self.mstsc_link("9.19.176.248", "administrator", "APGame@2022")
+            self.mstsc_link("9.30.11.218", self.user, self.first_password)
 
-"""
+        elif index == 37:
+            self.mstsc_link("9.19.176.233", self.user, self.two_password)
+
+    def computer_name(self):
+        computer_name_dict = {}
+        computer_name_dict["Computer"] = " %s以下都是PC的远程机器%s " % ("~" * 10, "~" * 10) + "\n"
+        computer_name_dict["冒烟包机器"] = "{}分支主干{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["1"] = "冒烟包Android的机器-9.30.18.100"
+        computer_name_dict["2"] = "冒烟包DS的机器-9.30.17.241"
+        computer_name_dict["3"] = "冒烟包Editor的机器-9.30.18.126"
+        computer_name_dict["4"] = "冒烟包WinClient的机器-9.30.18.101"
+        computer_name_dict["5"] = "冒烟包WinClientOB的机器-9.30.4.170"
+        computer_name_dict["6"] = "冒烟包WinclientReplay的机器-9.30.19.72" + "\n"
+        computer_name_dict["ASAN包机器"] = "{}分支主干{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["7"] = "主干ASAN包Android的机器-9.30.18.26"
+        computer_name_dict["8"] = "主干ASAN包DS的机器-9.30.19.165" + "\n"
+        computer_name_dict["资源剔除机器"] = "{}分支主干{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["9"] = "资源剔除的机器-9.30.4.61"
+        computer_name_dict["10"] = "资源剔除的机器-9.19.176.248" + "\n"
+        computer_name_dict["CE包机器"] = "{}分支主干{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["11"] = "CE包Android的机器-9.30.19.144"
+        computer_name_dict["12"] = "CE包Android的机器-9.30.4.182"
+        computer_name_dict["13"] = "CE包DS的机器-9.30.18.80" + "\n"
+        computer_name_dict["自动构建包机器"] = "{}分支主干{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["14"] = "自动构建包DS的机器-9.30.17.216"
+        computer_name_dict["15"] = "自动构建包Android的机器-9.30.18.93" + "\n"
+        computer_name_dict["GNT01机器"] = "{}分支GNT01{} ".format("-" * 15, "-" * 15)
+        computer_name_dict["16"] = "冒烟包Android的机器-9.30.19.140"
+        computer_name_dict["17"] = "冒烟包DS的机器-9.30.7.154"
+        computer_name_dict["18"] = "冒烟包Editor,Winclient的机器-9.30.11.144"
+        computer_name_dict["19"] = "ASAN包Android的机器-9.30.7.183"
+        computer_name_dict["20"] = "ASAN包DS的机器-9.30.8.173"
+        computer_name_dict["21"] = "Release包DS的机器-9.19.176.101"
+        computer_name_dict["22"] = "Release包Android的机器-9.30.19.21"
+        computer_name_dict["23"] = "9.30.10.184"
+        computer_name_dict["24"] = "9.19.176.165" + "\n"
+        computer_name_dict["IGN"] = "{}分支主干{}".format("-" * 15, "-" * 15)
+        computer_name_dict["25"] = "IGN本地化机器-9.30.6.236" + "\n"
+        computer_name_dict["其余机器"] = "{}分支主干{}".format("-" * 15, "-" * 15)
+        computer_name_dict["26"] = "单点机器-9.19.177.32"
+        computer_name_dict["27"] = "热更机器-9.30.10.151"
+        computer_name_dict["28"] = "diff以及资源扫描-9.30.18.37"
+        computer_name_dict["29"] = "9.19.177.7"
+        computer_name_dict["30"] = "9.30.4.180"
+        computer_name_dict["31"] = "9.30.4.153"
+        computer_name_dict["32"] = "9.19.177.28"
+        computer_name_dict["33"] = "9.19.177.35"
+        computer_name_dict["34"] = "9.30.11.166"
+        computer_name_dict["35"] = "9.30.17.134"
+        computer_name_dict["36"] = "9.30.11.218"
+        computer_name_dict["37"] = "9.19.176.233"
+        for k, v in computer_name_dict.items():
+            print(k, v)
+
+        return computer_name_dict
+
+if __name__ == '__main__':
+    RemoteDesk = remote_computer()
+    remote_computer().computer_name()
+    input_index = int(input('输入对应远程构建机序号: '))
+    remote_computer().switch_computer(input_index)
+
