@@ -123,6 +123,33 @@ class remote_computer:
             self.mstsc_link("9.30.11.218", self.user, self.first_password)
 
         elif index == 37:
+            self.mstsc_link("9.30.10.225", self.user, self.first_password)
+
+        elif index == 38:
+            self.mstsc_link("9.30.11.47", self.user, self.first_password)
+
+        elif index == 39:
+            self.mstsc_link("9.30.16.16", self.user, self.first_password)
+
+        elif index == 40:
+            self.mstsc_link("9.30.10.75", self.user, self.first_password)
+
+        elif index == 41:
+            self.mstsc_link("9.30.8.11", self.user, self.first_password)
+
+        elif index == 42:
+            self.mstsc_link("9.30.10.96", self.user, self.first_password)
+
+        elif index == 43:
+            self.mstsc_link("9.30.11.31", self.user, self.first_password)
+
+        elif index == 44:
+            self.mstsc_link("9.30.9.222", self.user, self.first_password)
+
+        elif index == 45:
+            pass
+
+        elif index == 50:
             self.mstsc_link("9.19.176.233", self.user, self.two_password)
 
     def computer_name(self):
@@ -169,10 +196,22 @@ class remote_computer:
         computer_name_dict["31"] = "9.30.4.153"
         computer_name_dict["32"] = "9.19.177.28"
         computer_name_dict["33"] = "9.19.177.35"
-        computer_name_dict["34"] = "9.30.11.166"
+        computer_name_dict["34"] = "9.30.11.166" + "\n"
+        computer_name_dict["部署中"] = "{}".format("=" * 30)
         computer_name_dict["35"] = "9.30.17.134"
         computer_name_dict["36"] = "9.30.11.218"
-        computer_name_dict["37"] = "9.19.176.233"
+        computer_name_dict["37"] = "9.30.10.225"
+        computer_name_dict["38"] = "9.30.11.47"
+        computer_name_dict["39"] = "9.30.16.16"
+        computer_name_dict["40"] = "9.30.10.75"
+        computer_name_dict["41"] = "9.30.8.11"
+        computer_name_dict["42"] = "9.30.10.96"
+        computer_name_dict["43"] = "9.30.11.31"
+        computer_name_dict["44"] = "9.30.9.222"
+        computer_name_dict["45"] = ""
+        computer_name_dict["46"] = ""
+        computer_name_dict["APGame"] = "{}APGame预留机器{}".format("-" * 15, "-" * 15)
+        computer_name_dict["50"] = "9.19.176.233"
         for k, v in computer_name_dict.items():
             print(k, v)
 

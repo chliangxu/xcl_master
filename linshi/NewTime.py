@@ -8,6 +8,16 @@ class NewTime:
         # 显示实时的时间戳
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
 
+    def new_time(self):
+        import time
+
+        timestamp = 1685790821
+
+        # 转换成localtime
+        time_local = time.localtime(timestamp)
+        # 转换成新的时间格式(2016-05-05 20:28:54)
+        dt = time.strftime("%Y-%m-%d %H:%M:%S", time_local)
+        print(dt)
 
     def send_info(self):
         # while True:
@@ -35,23 +45,22 @@ class NewTime:
         print(ret)
         return True
 if __name__ == '__main__':
-    print(NewTime().ko)
+    NewTime().new_time()
+    # print(NewTime().ko)
 
-class mater:
+# class mater:
+#
+#     def __init__(self):
+#         self.regex = self.signed_regex
+#
+#     @property
+#     def signed_regex(self) -> str:
+#         return f"-?{self.regex}"
+#
+#
+#
+# class linsh(mater):
+#
+#     regex = "15926811223"
+#     part_isolating = True
 
-    def __init__(self):
-        self.regex = self.signed_regex
-
-    @property
-    def signed_regex(self) -> str:
-        return f"-?{self.regex}"
-
-
-
-class linsh(mater):
-
-    regex = "15926811223"
-    part_isolating = True
-
-
-print(linsh())
