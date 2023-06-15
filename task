@@ -8,3 +8,5 @@ pip freeze  > requirements.txt
 2. 使用requirements安装包
 
 pip install -r requirements.txt
+
+3.python的platform模块可以看看

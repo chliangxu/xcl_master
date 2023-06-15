@@ -233,19 +233,21 @@ class SingPipelineInfo:
             ret_ds = re.findall(r'DS', self.name)
             ret_winclient = re.findall(r'Win', self.name)
             if (ret_android):
-                package_str = re.findall(r'.*\.apk', artifact['name'])
-                package_path_str = re.findall(r'.*\.apk', artifact['path'])
+                package_str = re.findall(r'Shipping.*\.apk', artifact['name'])
+                # print(package_str)
+                package_path_str = re.findall(r'Shipping.*\.apk', artifact['path'])
                 self.package_path = artifact['path']
                 # print(artifact['name'])
                 # print(self.artifactList)
                 # print(len(self.artifactList))
 
                 if (package_str):
+                    # print(package_str)
                     package_version = package_str[0]
                     self.appVersion = re.findall(r'\d+\.\d+\.\d+.\d+', package_version)[0]
                     break
             if (ret_ios):
-                package_str = re.findall(r'.*\.ipa', artifact['name'])
+                package_str = re.findall(r'Shipping.*\.ipa', artifact['name'])
                 self.package_path = artifact['path']
                 if (package_str):
                     package_version = package_str[0]
@@ -292,7 +294,12 @@ class SingPipelineInfo:
         # session = requests_cache.CachedSession()  # 创建缓存会话
         # from shell import shell
         path = urllib.parse.quote(self.package_path)
-        path = path.replace('Development', 'Shipping')
+        # print(self.appVersion)
+        # shipping_replace_str = 'Development_Stable_' + self.appVersion + '_Less_PSO_U_arm64_32_signed'
+        # shipping_replace_str_after = 'Shipping_Stable_' + self.appVersion + '_Less_PSO_U_arm64_32_1TuoN_signed'
+        # path = path.replace('Development', 'Shipping')
+        # path = path.replace(shipping_replace_str, shipping_replace_str_after)
+        # print(path)
         # path = '/' + self.pipelineId + '/' + self.buildId + '/' + self.package_path
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&pipelineId=" + self.pipelineId + "&buildId=" + self.buildId
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=/[P4_SVN][冒烟包]Android/464/Development/GNYX_Android_Development_Stable_0.2.648.74_Less_arm64_32_signed.apk"
@@ -524,14 +531,13 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
     data_title_num = time.strftime('%Y{Y}%m{m}%d{d}').format(Y='', m='', d='')
 
     # append_info = '【GN_Dev_Stable】\n' + data_title + 'GN冒烟包版本信息' + '\n' + 'Stable分支：AClient: GNYX_Stable_' + data_title_num + '; AEngine: GNYX_Stable_' + data_title_num + '; AClient_Content: GNYX_Stable_' + data_title_num
-    append_info = '【GN_P4_SVN】\n' + data_title + 'GN冒烟包版本信息'
+    append_info = '【GN_主干_Trunk】\n' + data_title + 'GN冒烟包版本信息'
     print(append_info)
     for single_pipeline in single_pipeline_list:
         print(single_pipeline)
 
     # print("服务器：主干_冒烟服(Dev)")
     print("服务器：主干_稳定服(Dev)")
-    print("服务器：主干_稳定服(Shipping)")
     print("[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)")
     return single_pipeline_list
 
