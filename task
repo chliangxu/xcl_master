@@ -10,3 +10,19 @@ pip freeze  > requirements.txt
 pip install -r requirements.txt
 
 3.python的platform模块可以看看
+
+UE4虚幻引擎的术语理解
+4.https://docs.unrealengine.com/5.1/zh-CN/unreal-engine-glossary/
+
+5.P4的回退详解
+5.1.回退到某一条提交
+提交到远端
+从P4号开头往下依次undo，直到想要的那条提交位置（少量）
+不提交到远端
+直接强更到对应的P4号
+
+5.2.回退某一条提交
+提交到远端
+直接到主目录的历史记录里undo
+不提交到远端
+暂时没有这种操作

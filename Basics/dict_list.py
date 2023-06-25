@@ -62,6 +62,12 @@ class first_main:
 
         return False
 
+    # 看字典是否是空的
+    def is_empty_dict(self, data_dict):
+        if not bool(data_dict):
+            return True
+        return False
+
 
 xcl = first_main()
 xcl.first_list()

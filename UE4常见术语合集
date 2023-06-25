@@ -1,0 +1,22 @@
+UE4常见术语
+1.Actor
+所有可以放入关卡的对象都是 Actor，比如摄像机、静态网格体、玩家起始位置。Actor支持三维变换，例如平移、旋转和缩放。你可以通过游戏逻辑代码（C++或蓝图）创建（生成）或销毁Actor。
+
+在C++中，AActor是所有Actor的基类。
+
+2.AI
+AI 也称人工智能，是由一组程序指令而非人工输入控制的行为。例如，非玩家角色（NPC)）就是由AI控制。
+
+3.Animation
+动画（Animation） 可以概括为属性值随着时间发生变化。例如，位置、旋转和或缩放的变化，但也可扩展至任何其他属性值。
+
+"动画（Animation）"可专指虚幻Matinee中创建的序列，或专指在外部三维建模和动画应用程序中为骨架网格体创建的、导入到虚幻编辑器（Unreal Editor）中的序列。它甚至可以指由C++代码或蓝图创建的某个Actor的属性（或多个属性）随着时间发生变化。
+
+4.Animation Sequence
+动画序列（Animation Sequence）（或 AnimSequence）是在三维建模和动画应用程序中为骨架网格体创建的、导入到虚幻编辑器中的动画资产。你可以在Persona中使用动画序列（Animation Sequence）。
+
+5.Asset
+资产（Asset） 是用于构建游戏的元素。例如可导入到 内容浏览器（Content Browser） 或在其中创建的内容，例如材质（Material）、静态网格体（Static Mesh）、纹理（Texture）、粒子系统（Particle System）、蓝图（Blueprint）、和Sound Cue。各资产都保存在单独的.uasset文件中。
+
+6.Blueprint Visual Scripting 等价于 Blueprints
+蓝图可视化脚本（Blueprint Visual Scripting） 系统（或缩写 蓝图（Blueprints））是一种功能齐全的游戏脚本系统，它允许你在虚幻编辑器（Unreal Editor）中通过基于节点的界面来创建游戏元素。和许多常见脚本语言一样，你可以用它在引擎中定义面向对象的类或object。在使用UE4时，你会发现使用蓝图定义的类一般也统称蓝图。
