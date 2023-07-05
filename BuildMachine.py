@@ -1,242 +1,145 @@
-# -*- coding: utf-8 -*-
-
 import platform
 import os
 import sys
 import hashlib
 import subprocess
-import shutil
 import re
-# import requests
-# import json
-
-if platform.system().lower() == 'windows':
-    if platform.python_version().split('.')[0] != '3':
-        import _winreg as winreg
-    else:
-        import winreg
 
 
-def ExecutCommand(command, exit_when_failed=True):
-    # command = command + " 2>&1"
-    print('Execute command: {0}'.format(command))
+class BuildMachine:
 
-    sys.stdout.flush()
-    rst = os.system(command)
-    sys.stdout.flush()
+	def __init__(self):
+		self.perforce_user = os.getenv('P4User', 'gnbuild')
+		self.perforce_password = os.getenv('P4Password', 'GNYXbuild_2022')
+		self.svn_user = os.getenv('SvnUser', 'gnbuild')
+		self.svn_password = os.getenv('SvnPassword', 'GNYXbuild_2022')
+		self.workspace_name = os.getenv('WorkspaceName', 'gnbuild_v_xinnwan-PC92')
+		self.workspace_path = os.getenv('WorkspacePath', r'G:\GNGame\branches\GNT01')
+		self.perforce_ticket_path = os.getenv('P4Ticket', r'C:/Users/Administrator/p4tickets.txt')
+		# self.perforce_ticket_path = os.getenv('P4Ticket', r'C:/Users/v_xinnwan/p4tickets.txt')
+		self.perforce_login_server = os.getenv('P4LoginUrlPort', r'apgamep4.woa.com:8667')
+		self.branch_name = ''
+		self.branch_path = ''
+		self.perforce_branch_name = ''
+		self.svn_branch_name = ''
+		self.project_aclient_path = ''
+		self.project_aengine_path = ''
+		self.update_path_list = []
 
-    if exit_when_failed and rst != 0:
-        print('Execute command failed with result: {0}'.format(rst))
-        sys.exit(1)
+	def set_branch_name_and_path(self):
+		if self.workspace_path != '':
+			self.branch_name = os.path.basename(self.workspace_path)
+		else:
+			print("Build Args WorkspacePath is Null or '\ or /' is end")
 
+		if self.branch_name != 'trunk':
+			self.perforce_branch_name = '//GNGame_depot/{0}/{1}'.format('GNYXGame/branches', self.branch_name)
+			self.svn_branch_name_aclient = 'https://svn.woa.com/GNGame/GNClient/branches/{0}/AClient'.format(self.branch_name)
+			self.svn_branch_name_aengine = 'https://svn.woa.com/GNGame/GNClient/branches/{0}/AEngine/Source'.format(self.branch_name)
+		else:
+			self.perforce_branch_name = '//GNGame_depot/{0}/{1}'.format('GNYXGame', self.branch_name)
+			self.svn_branch_name_aclient = 'https://svn.woa.com/GNGame/GNClient/{0}/AClient'.format(self.branch_name)
+			self.svn_branch_name_aengine = 'https://svn.woa.com/GNGame/GNClient/{0}/AEngine/Source'.format(self.branch_name)
 
-def ExecuteCommandEx(command, exit_when_failed=True):
-    try:
-        print('Execute command: {0}'.format(command))
-
-        subprocess.check_call(command, shell=True)
-    except subprocess.CalledProcessError as error:
-        print('Execute command failed with result: {0}'.format(error.returncode))
-        if exit_when_failed:
-            sys.exit(1)
-
-
-def IsWidnows():
-    return (platform.system().lower() == 'windows')
-
-
-def OutputStepInfo(message):
-    if not hasattr(OutputStepInfo, "counter"):
-        OutputStepInfo.counter = 0
-
-    OutputStepInfo.counter += 1
-
-    print('\n-------------------------------------------------------------------------------------------------------')
-    print('Step {0}: {1}'.format(OutputStepInfo.counter, message))
-    print('-------------------------------------------------------------------------------------------------------\n')
-
-
-def CreatePerforceWorkspace(workspace_name, workspace_path, branch_path, owner, host):
-    OutputStepInfo('Create Perforce Workspace')
-
-    f = open('WorkspaceDesc.txt', 'w')
-    f.write('Client: {0}\n'.format(workspace_name))
-    f.write('Owner: {0}\n'.format(owner))
-    f.write('Host: {0}\n'.format(host))
-    f.write('Options: allwrite clobber nocompress unlocked nomodtime normdir\n')
-    f.write('Description: Auto created by {0}.\n'.format(owner))
-    f.write('Root: {0}\n'.format(workspace_path))
-    f.write('View:\n')
-    f.write('\t{0}/... //{1}/...\n'.format(branch_path, workspace_name))
-
-    if os.environ.get('TargetPlat', 'Android') == 'Android' or os.environ.get('TargetPlat', 'Android') == 'IOS':
-        f.write('\t{0}/AClient_Pak/... //{1}/AClient_Pak/...\n'.format(branch_path, workspace_name))
-        f.write('\t{0}/AClient_Pak/WindowsNoEditor/... //{1}/AClient_Pak/WindowsNoEditor/...\n'
-                .format(branch_path, workspace_name))
-    else:
-        f.write('\t{0}/AClient_Pak/WindowsNoEditor/... //{1}/AClient_Pak/WindowsNoEditor/...\n'
-                .format(branch_path, workspace_name))
-
-    if os.environ.get('TargetPlat', 'Android') == 'DS':
-        f.write('\t{0}/AClient_Pak/tgz/... //{1}/AClient_Pak/tgz/...\n'.format(branch_path, workspace_name))
-        f.write('\t{0}/AClient_Pak/tgz/DSDevelopment/... //{1}/AClient_Pak/tgz/DSDevelopment/...\n'
-                .format(branch_path, workspace_name))
-        f.write('\t{0}/AClient_Pak/tgz/DSDevelopment_ASAN/... //{1}/AClient_Pak/tgz/DSDevelopment_ASAN/...\n'
-                .format(branch_path, workspace_name))
-        f.write(
-            '\t{0}/AClient_Pak/tgz/DSDevelopment_CE/... //{1}/AClient_Pak/tgz/DSDevelopment_CE/...\n'
-                .format(branch_path, workspace_name))
-        f.write('\t{0}/AClient_Pak/tgz/DSDevelopment_ES/... //{1}/AClient_Pak/tgz/DSDevelopment_ES/...\n'
-                .format(branch_path, workspace_name))
-
-    f.close()
-
-    ExecutCommand('{0} WorkspaceDesc.txt'.format('type' if IsWidnows() else 'cat'))
-    ExecuteCommandEx('{0} WorkspaceDesc.txt | p4 client -i'.format('type' if IsWidnows() else 'cat'))
+		self.project_aclient_path = os.path.join(self.workspace_path, 'AClient')
+		self.project_aengine_path = os.path.join(self.workspace_path, 'AEngine')
+		self.update_path_list.append(self.project_aclient_path)
+		self.update_path_list.append(self.project_aengine_path)
+		print(self.update_path_list)
 
 
-def UpdatePerforceWorkspace(is_remove_workspace, workspace_path, branch_path):
-    if is_remove_workspace and os.path.exists(workspace_path):
-        OutputStepInfo('Remove workspace folder: {0}'.format(workspace_path))
-        # shutil.rmtree(workspace_path)
-        if os.path.exists(workspace_path):
-            shutil.rmtree(workspace_path)
+	def execute_command(self, command, exit_when_failed=True):
+		# command = command + " 2>&1"
+		print('Execute command: {0}'.format(command))
 
-    OutputStepInfo('Update Perforce Workspace, branch_path: {0}'.format(branch_path))
+		sys.stdout.flush()
+		rst = os.system(command)
+		sys.stdout.flush()
 
-    ExecutCommand('p4 -C utf8 revert -a -c default')
-    ExecutCommand('p4 -C utf8 sync {0} {1}/...#head'.format('-f' if is_remove_workspace else '', branch_path))
+		if exit_when_failed and rst != 0:
+			print('Execute command failed with result: {0}'.format(rst))
+			sys.exit(1)
 
-
-def CheckoutSVN(branch_path, user, passwd, workspace_path):
-    OutputStepInfo('Checkout SVN, branch_path: {0}'.format(branch_path))
-
-    survive_path = os.path.join(workspace_path, 'AClient')
-
-    BranchName = os.getenv("BranchName", "trunk")
-
-    if BranchName != "trunk":
-        BranchName = "/branches/%s" % (BranchName)
-        print("不是trunk的分支", BranchName)
-
-    ExecutCommand('svn cleanup {0}'.format(survive_path), False)
-    ExecutCommand(
-        'svn checkout --force https://svn.woa.com/GNGame/GNClient/{0}/AClient {1} --username {2} --password {3}'.format(
-            BranchName, survive_path, user, passwd,
-        ))
-    ExecutCommand('svn revert --depth=infinity {0}'.format(survive_path))
-
-    engine_path = os.path.join(workspace_path, "AEngine")
-    source_svn_path = os.path.join(workspace_path, "AEngine", "Engine", "Source")
-    ExecutCommand('svn cleanup {0}'.format(source_svn_path), False)
-    ExecutCommand(
-        'svn checkout --force https://svn.woa.com/GNGame/GNClient/{0}/AEngine/Source {1} --username {2} --password {3}'.format(
-            BranchName, source_svn_path, user, passwd,
-        ))
-    ExecutCommand('svn revert --depth=infinity {0}'.format(source_svn_path))
+	def execute_comment_ex(self, command, exit_when_failed=True):
+		try:
+			print('Execute command: {0}'.format(command))
+			subprocess.check_call(command, shell=True)
+		except subprocess.CalledProcessError as error:
+			print('Execute command failed with result: {0}'.format(error.returncode))
+			if exit_when_failed:
+				sys.exit(1)
 
 
-def send_message_to_wx_robot_report(message_str, robot_key, user_list):
-    # 企业微信机器人发送消息
-    webhook_url = 'https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=%s' % robot_key
+	def is_widnows(self):
+		return (platform.system().lower() == 'windows')
 
-    # 推送消息时，可能存在消息内容过长情况，这里分批发送
-    content_list = []
-    MAX_LEN = 4096
-    while len(message_str) >= MAX_LEN:
-        add_content = message_str[0:MAX_LEN]
-        content_list.append(add_content)
-        cur_msg_len = len(message_str)
-        message_str = message_str[MAX_LEN + 1:cur_msg_len]
-    content_list.append(message_str)
+	def core_create_perforce_workspace(self):
+		workspace_name = self.workspace_name
+		workspace_path = self.workspace_path
+		branch_path = self.perforce_branch_name
+		owner = self.perforce_user
+		host = platform.node()
 
-    for content_str in content_list:
-        headers = {
-            'Content-Type': 'application/json',
-        }
+		with open('WorkspaceDesc.txt', 'w') as f:
+			f.write('Client: {0}\n'.format(workspace_name))
+			f.write('Owner: {0}\n'.format(owner))
+			f.write('Host: {0}\n'.format(host))
+			f.write('Options: allwrite clobber nocompress unlocked nomodtime normdir\n')
+			f.write('Description: Auto created by {0}.\n'.format(owner))
+			f.write('Root: {0}\n'.format(workspace_path))
+			f.write('View:\n')
+			f.write('\t{0}/... //{1}/...\n'.format(branch_path, workspace_name))
 
-        data = {
-            "msgtype": "text",
-            "text": {
-                "content": content_str,
-                "mentioned_list": user_list,
-            }
-        }
-        response = requests.post(url=webhook_url, data=json.dumps(data), headers=headers)
-        print(response)
-
-def send_file_with_user():
-    user = os.getenv("SendUser", "v_chliangxu")
-    robot_key = "41757ab9-1285-419d-9386-08372b258a85"
-    msg = "流水线{}".format("https://devops.woa.com/console/pipeline/gngame/p-5b9a4f5e31024ceda8ab1ff514e85dfc/history")
-    msg += "机器{}，WorkspacePath{}， WorkspaceName{}".format(os.getenv('PC'), os.getenv('WorkspacePath'), os.getenv('WorkspaceName'))
-    send_message_to_wx_robot_report(msg, robot_key, user)
+		self.execute_command('{0} WorkspaceDesc.txt'.format('type' if self.is_widnows() else 'cat'))
+		self.execute_comment_ex('{0} WorkspaceDesc.txt | p4 client -i'.format('type' if self.is_widnows() else 'cat'))
 
 
+	def core_update_perforce_workspace(self, is_remove_workspace=False):
+		workspace_path = self.workspace_path
+
+		if is_remove_workspace and os.path.exists(workspace_path):
+			# shutil.rmtree(workspace_path)
+			if os.path.exists(workspace_path):
+				os.remove(workspace_path)
+		for update_path in self.update_path_list:
+			self.execute_command('p4 -C utf8 revert -a -c default')
+			self.execute_command('p4 -C utf8 sync {0} {1}/...#head'.format('-f' if is_remove_workspace else '-f', update_path))
+
+	def core_checkout_svn(self):
+		for update_path in self.update_path_list:
+			if re.findall(r'AClient', update_path):
+				self.execute_command('svn cleanup {0}'.format(update_path), False)
+				self.execute_command('svn checkout --force {0} {1} --username {2} --password {3}'.format(
+					self.svn_branch_name_aclient, self.project_aclient_path, self.svn_user, self.svn_password))
+				self.execute_command('svn revert --depth=infinity {0}'.format(update_path))
+
+			if re.findall(r'AEngine', update_path):
+				project_aengine_source = os.path.join(update_path, 'Engine', 'Source')
+				self.execute_command('svn cleanup {0}'.format(project_aengine_source), False)
+				self.execute_command('svn checkout --force {0} {1} --username {2} --password {3}'.format(
+					self.svn_branch_name_aengine, project_aengine_source, self.svn_user, self.svn_password))
+				self.execute_command('svn revert --depth=infinity {0}'.format(project_aengine_source))
 
 
-def Run():
-    p4ticket = os.getenv('P4Ticket', '')
-    ExecutCommand('p4 set P4TICKETS={0}'.format(p4ticket))
-    print('System info:', platform.uname())
-    print('Python version:', platform.python_version())
-
-    p4_user = os.getenv('SODA_P4USER')
-    p4_passwd = os.getenv('SODA_P4PASSWD')
-    svn_user = os.getenv('SODA_SVNUSER')
-    svn_passwd = os.getenv('SODA_SVNPASSWD')
-    workspace_name = os.getenv('WorkspaceName')
-    workspace_path = os.getenv('WorkspacePath')
-    main_branch_name = os.getenv('MainBranchName')
-    branch_name = os.getenv('BranchName') if os.getenv('BranchName') else "trunk"
-    is_remove_workspace = (os.getenv('IsRemoveWorkspace').lower() == 'true')
-
-    print(
-        'p4_user: {0}\np4_passwd: {1}\nsvn_user: {2}\nsvn_passwd: {3}\nworkspace_name: {4}\nworkspace_path: {5}\nmain_branch_name: {6}\nbranch_name: {7}\n'.format(
-            p4_user, p4_passwd, svn_user, svn_passwd, workspace_name, workspace_path, main_branch_name, branch_name))
-
-    # Step 1: Setup Perforce Environment
-    OutputStepInfo('Setup Perforce Environment')
-
-    os.environ['P4CHARSET'] = 'utf8'
-    os.environ['P4USER'] = p4_user
-    os.environ['P4CLIENT'] = workspace_name
-    if p4_passwd:
-        os.environ['P4PASSWD'] = hashlib.md5(p4_passwd.encode()).hexdigest().upper()
-
-    print('P4CHARSET: {0}\nP4PORT: {1}\nP4USER: {2}\nP4PASSWD: {3}\nP4CLIENT: {4}\n'.format(os.getenv('P4CHARSET'),
-                                                                                            os.getenv('P4PORT'),
-                                                                                            os.getenv('P4USER'),
-                                                                                            os.getenv('P4PASSWD'),
-                                                                                            os.getenv('P4CLIENT')))
-
-    if p4_passwd and not IsWidnows():
-        ExecuteCommandEx('echo {0} | p4 login'.format(p4_passwd))
-
-    if branch_name != "trunk":
-        branch_name = "branches/%s" % (branch_name)
-        print("不是trunk的分支", branch_name)
-
-    p4_branch_path = '//GNGame_depot/{0}/{1}'.format(main_branch_name, branch_name)
-    svn_branch_path = 'https://svn.woa.com/GNGame/GNClient/{0}/AClient'.format(
-        branch_name)
-
-    # Step 2: Create Perforce Workspace
-    CreatePerforceWorkspace(workspace_name, workspace_path, p4_branch_path, p4_user, platform.node())
-
-    # Step 3: Update Perforce Workspace And Remove Worksapce Folder If Necessary
-    UpdatePerforceWorkspace(is_remove_workspace, workspace_path, p4_branch_path)
-
-    # Step 4: Checkout SVN
-    CheckoutSVN(svn_branch_path, svn_user, svn_passwd, workspace_path)
-
-    # Step 5：
-
-    # Step 6: 发送消息到企业微信群@对应的人
-    # send_file_with_user()
+		if not self.is_widnows():
+			self.execute_command('chmod -R 777 "{0}"'.format(self.workspace_path), False)
 
 
+def real_run():
+	buildMachine = BuildMachine()
+	buildMachine.set_branch_name_and_path()
+	os.environ['P4CHARSET'] = 'utf8'
+	os.environ['P4USER'] = buildMachine.perforce_user
+	os.environ['P4CLIENT'] = buildMachine.workspace_name
+	os.environ['P4PORT'] = buildMachine.perforce_login_server
+	os.environ['P4PASSWD'] = hashlib.md5(buildMachine.perforce_password.encode()).hexdigest().upper()
+	if not buildMachine.is_widnows():
+		buildMachine.execute_comment_ex(('echo {0} | p4 login'.format(buildMachine.perforce_password)))
+
+	buildMachine.core_create_perforce_workspace()
+	buildMachine.core_update_perforce_workspace()
+	buildMachine.core_checkout_svn()
 
 
 if __name__ == '__main__':
-    Run()
+	real_run()
