@@ -33,6 +33,8 @@ d.git常用命令
 
 　　git log  --查看commit记录
 
+    git rev-parse HEAD --查看本地的commit
+
 　　git reflog  --查看所有变更记录
 
     git checkout --file // 撤销工作区的修改

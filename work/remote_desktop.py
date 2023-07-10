@@ -75,7 +75,7 @@ class remote_computer:
             self.mstsc_link("9.30.8.173", self.user, self.first_password)
 
         elif index == 21:
-            self.mstsc_link("9.19.176.10", self.user, self.first_password)
+            self.mstsc_link("9.19.176.101", self.user, self.first_password)
 
         elif index == 22:
             self.mstsc_link("9.30.19.21", self.user, self.first_password)
