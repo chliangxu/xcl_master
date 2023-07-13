@@ -46,21 +46,5 @@ class NewTime:
         return True
 if __name__ == '__main__':
     NewTime().new_time()
-    # print(NewTime().ko)
 
-# class mater:
-#
-#     def __init__(self):
-#         self.regex = self.signed_regex
-#
-#     @property
-#     def signed_regex(self) -> str:
-#         return f"-?{self.regex}"
-#
-#
-#
-# class linsh(mater):
-#
-#     regex = "15926811223"
-#     part_isolating = True
 
