@@ -83,8 +83,12 @@ WSGI_APPLICATION = 'my_django.wsgi.application'
 # 数据库配置 默认的数据库为sqlite
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': "info",
+        "USER": "root",
+        "PASSWORD": "123456789",
+        "HOST": "localhost",
+        "PORT": "3306",
     }
 }
 
