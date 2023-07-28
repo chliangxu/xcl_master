@@ -68,4 +68,3 @@ e.常用命令
     4.
 
 """
-print("hello world")
