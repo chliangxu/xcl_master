@@ -1,4 +1,6 @@
 import os
+import string
+import random
 
 class Func:
 
@@ -16,25 +18,22 @@ class Func:
         new_ret = map(lambda a: a + 10, li)
         print(list(new_ret))
 
-    def two_func(self):
-        pass
+    # 随机生成字母和数字
+    def two_func(self, n):
+        """
+        ascii_lowercase:小写的字母（a-z）
+        ascii_lowercase:大写的字母（A-Z）
+        ascii_letters:所有的字母（a-z和A-Z）
+        :return: 随机的产生字母数（n）
+        """
+        all_chs = string.ascii_letters + string.digits
+        need_str = [ random.choice(all_chs) for i in range(n)]
+        finally_str = "".join(need_str)
+        print(f"类型是{type(finally_str)}\n"
+              f"输出的内容{finally_str}")
+        return finally_str
 
 
-# Func().new_func()
 
+Func().two_func(9)
 
-def get_work_path():
-    working_dir = os.getcwd()
-    work_path = os.path.join(working_dir, "stiff")
-    if not os.path.exists(work_path):
-        os.mkdir(work_path)
-        print("old_work_path", type(work_path), work_path)
-    return work_path
-    # return work_path
-
-def get_path():
-    print(get_work_path())
-    work_path = os.path.join(get_work_path(), "new")
-    print("111", work_path)
-
-print(get_path())
