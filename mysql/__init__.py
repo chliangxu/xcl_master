@@ -134,14 +134,51 @@ DROP PRIMARY KEY;
 # 当需要产生唯一标识符或顺序值时，可设置自增长
 # 自增长列约束的列必须是键列（主键列，唯一键列）
 # 自增约束的列的数据类型必须是整数类型
-#
+# 如果自增列指定了0和NULL，会在当前最大值的基础上自增，如果自增列手动指定了具体值，直接赋值为具体值
+# 当向主键（含AUTO_INCREMENT）的字符上添加0或null时，实际上会自动的往上添加指定字段的数值
+# 添加自增约束
+# 开发中，一旦主键作用的字段声明有AUTO_INCREMENT,则我们在添加数据时，就不要给主键赋值了
+"""
+CREATE TABLE test7(
+id INT PRIMARY KEY AUTO_INCREMENT, 
+last_name VARCHAR(15),
+salary DECIMAL(10,2),
+email VARCHAR(25)
+);
+"""
+# 删除自增约束
+"""
+ALTER TABLE test7
+MODIFY id INT
+"""
 
+# V: DEFAULT 默认值约束
+# 给某个字段/某列指定默认值，一旦设置默认值，在插入数据时，如果此字段没有显式赋值，则赋值为默认值。
+# 建表时
+"""
+create table 表名称(
+字段名 数据类型 primary key,
+字段名 数据类型 unique key not null,
+字段名 数据类型 unique key,
+字段名 数据类型 not null default 默认值,
+);
+"""
+# 建表后
+"""
+alter table 表名称 modify 字段名 数据类型 default 默认值;
+#如果这个字段原来有非空约束，你还保留非空约束，那么在加默认值约束时，还得保留非空约束，否则非空约束就被删除了
+#同理，在给某个字段加非空约束也一样，如果这个字段原来有默认值约束，你想保留，也要在modify语句中保留默认值约束，否则就删除了
+alter table 表名称 modify 字段名 数据类型 default 默认值 not null;
+"""
+# 删除默认值
+"""
+alter table 表名称 modify 字段名 数据类型; #删除默认值约束，也不保留非空约束
+alter table 表名称 modify 字段名 数据类型 not null; #删除默认值约束，保留非空约束
+"""
 
-
-
-# POREIGN KEY: 外键约束
+# V: POREIGN KEY: 外键约束
 # CHECK 检查约束
-# DEFAULT 默认值约束
+# https://www.jb51.net/article/276841.htm
 # 添加约束/删除约束
 # CREATE TABLE时添加约束
 # ALTER TABLE时增加约束，删除约束
