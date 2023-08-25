@@ -7,6 +7,7 @@ import random
 import urllib.parse
 import subprocess
 
+
 class ElementInfo:  # 插件信息
 
     def __init__(self):
@@ -196,6 +197,7 @@ class SingPipelineInfo:
 
     def set_build_time(self):
         self.buildTime = time.strftime('%Y-%m-%d %H:%M', time.localtime(self.startTime / 1000))
+        return self.buildTime
 
     def set_build_num(self):
         self.buildNum = self.singlePipelineInfo['buildNum']
@@ -290,7 +292,6 @@ class SingPipelineInfo:
                     self.qs_url = short_url
                     break
 
-
     def get_v4_user_artifactory_appDownloadUrl(self):
         # import requests_cache
         import time
@@ -310,7 +311,7 @@ class SingPipelineInfo:
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=/[P4_SVN][冒烟包]Android/464/Development/GNYX_Android_Development_Stable_0.2.648.74_Less_arm64_32_signed.apk"
 
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
-        request_url =  "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
+        request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
         # print(request_url)
         # time.sleep(4)
         access_token = self.set_access_token()
@@ -343,10 +344,6 @@ class SingPipelineInfo:
                 # return ret_json
         except requests.exceptions.ConnectionError:
             print('网络错误，请重新运行')
-
-
-
-
 
     def get_user_build_detail(self):
         request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/afgame/build_histories?pipelineId=" + self.pipelineId + '&pageSize=40'
@@ -463,7 +460,7 @@ class SingPipelineInfo:
             return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n构建号：#' + str(
                 self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
         else:
-            return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n' + '[二维码：链接]'+ '(' + self.qs_url + ')'  + '\n构建号：#' + str(
+            return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n' + '[二维码：链接]' + '(' + self.qs_url + ')' + '\n构建号：#' + str(
                 self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
             # return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')'  + '\n构建号：#' + str(
             #     self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
@@ -471,6 +468,7 @@ class SingPipelineInfo:
 
 def get_information(project_id, pipeline_id_dict, need_query_build_time):
     # pipeline_num = len(pipeline_id_dict)
+    build_time = ''
     single_pipeline_list = []
     if need_query_build_time != '':
         this_year = time.strftime("%Y-", time.localtime())
@@ -508,7 +506,7 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
                     singlePipelineInfo.set_artifact_list()
                     singlePipelineInfo.set_app_version()
                     singlePipelineInfo.set_build_num()
-                    singlePipelineInfo.set_build_time()
+                    build_time = singlePipelineInfo.set_build_time()
                     # singlePipelineInfo.set_qs_url()
                     singlePipelineInfo.get_v4_user_artifactory_appDownloadUrl()
                     single_pipeline_list.append(singlePipelineInfo)
@@ -526,14 +524,17 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
             singlePipelineInfo.set_artifact_list()
             singlePipelineInfo.set_app_version()
             singlePipelineInfo.set_build_num()
-            singlePipelineInfo.set_build_time()
+            build_time = singlePipelineInfo.set_build_time()
             # singlePipelineInfo.set_qs_url()
             singlePipelineInfo.get_v4_user_artifactory_appDownloadUrl()
 
             single_pipeline_list.append(singlePipelineInfo)
 
-    data_title = time.strftime('%m{m}%d{d}').format(m='月', d='日')
-    data_title_num = time.strftime('%Y{Y}%m{m}%d{d}').format(Y='', m='', d='')
+    # data_title = time.strftime('%m{m}%d{d}').format(m='月', d='日')
+    # data_title_num = time.strftime('%Y{Y}%m{m}%d{d}').format(Y='', m='', d='')
+
+    name = (build_time.split(' ')[0]).split('-')
+    data_title = name[1] + "月" + name[2] + "日"
 
     # append_info = '【GN_Dev_Stable】\n' + data_title + 'GN冒烟包版本信息' + '\n' + 'Stable分支：AClient: GNYX_Stable_' + data_title_num + '; AEngine: GNYX_Stable_' + data_title_num + '; AClient_Content: GNYX_Stable_' + data_title_num
     append_info = '【GN_主干_Trunk】\n' + data_title + 'GN冒烟包版本信息'
@@ -543,7 +544,8 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
 
     # print("服务器：主干_冒烟服(Dev)")
     print("服务器：主干_稳定服(Dev)")
-    print("[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)")
+    print(
+        "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)")
     return single_pipeline_list
 
 
@@ -577,7 +579,7 @@ def send_request_bot_planning_developping_group_project(content_all, mentioned_l
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n"  \
+                  + "服务器：主干_稳定服(Dev)\n" \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -588,6 +590,7 @@ def send_request_bot_planning_developping_group_project(content_all, mentioned_l
     }
     headers = {'Content-Type': 'application/json'}
     requests.post(url=robot_url, headers=headers, json=send_data)
+
 
 def send_request_bot_planning_developping_group_build(content_all, mentioned_list=''):
     color_list_second = ['navy', 'pink', 'orange', 'olive', 'yellow', 'gray', 'gray', 'olive']
@@ -620,7 +623,7 @@ def send_request_bot_planning_developping_group_build(content_all, mentioned_lis
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n"  \
+                  + "服务器：主干_稳定服(Dev)\n" \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -631,6 +634,7 @@ def send_request_bot_planning_developping_group_build(content_all, mentioned_lis
     }
     headers = {'Content-Type': 'application/json'}
     requests.post(url=robot_url, headers=headers, json=send_data)
+
 
 def send_request_bot_planning_developping_group_build_problem(content_all, mentioned_list=''):
     color_list_second = ['navy', 'pink', 'orange', 'olive', 'yellow', 'gray', 'gray', 'olive']
@@ -663,7 +667,7 @@ def send_request_bot_planning_developping_group_build_problem(content_all, menti
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n"  \
+                  + "服务器：主干_稳定服(Dev)\n" \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -674,7 +678,6 @@ def send_request_bot_planning_developping_group_build_problem(content_all, menti
     }
     headers = {'Content-Type': 'application/json'}
     requests.post(url=robot_url, headers=headers, json=send_data)
-
 
 
 if __name__ == '__main__':
@@ -693,9 +696,22 @@ if __name__ == '__main__':
 
     # need_query_build_time = '04-11 23:04'  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
     # need_query_build_time = ''   #例子,该值可为空字符串,表示查询最新的构建流水线信息
-    import datetime
-    today_date_str = datetime.datetime.today()
+    # import datetime
+    # today_date_str = datetime.datetime.today()
+    #
+    # need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
 
+    import datetime
+
+    today_date_str = datetime.datetime.today()
+    from bdateutil import isbday
+
+    need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
+    # need_query_build_time = '08-20 0:01'  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
+
+    yesterday_date_str = datetime.datetime.today() - datetime.timedelta(days=1)
+    if not isbday(yesterday_date_str):
+        today_date_str = yesterday_date_str
     need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
 
     single_pipline_list = get_information(project_id, pipeline_id_dict, need_query_build_time)
