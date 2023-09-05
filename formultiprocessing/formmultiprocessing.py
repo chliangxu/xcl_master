@@ -2,7 +2,7 @@ import multiprocessing
 from multiprocessing import Process, Pool, Queue, Pipe
 import os, time, random
 """
-【Python】Python多进程详解:https://zhuanlan.zhihu.com/p/493699150
+【Python】Python多进程详解:https://zhuanlan.zhihu.com/p/493699150， https://www.cnblogs.com/lj-C/p/14893317.html
 多进程
 作用：多进程可以充分利用多核CPU的计算能力，实现真正的并行计算。
 定义：进程是操作系统分配资源的基本单位。每个进程都有自己的内存空间，这意味着进程之间的变量是隔离的，一个进程无法访问另一个进程的变量。
