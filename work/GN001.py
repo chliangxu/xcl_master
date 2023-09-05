@@ -7,7 +7,6 @@ import random
 import urllib.parse
 import subprocess
 
-
 class ElementInfo:  # 插件信息
 
     def __init__(self):
@@ -78,7 +77,7 @@ class PipelineInfo:
             }
         )
         ret_json = ret.json()
-        print(ret_json)
+        # print(ret_json)
         self.accessToken = ret_json['data']['access_token']
 
     def set_access_token_old(self):
@@ -182,15 +181,12 @@ class SingPipelineInfo:
         ret_android = re.findall(r'Android', self.name)
         ret_ios = re.findall(r'IOS', self.name)
         ret_ds = re.findall(r'DS', self.name)
-        ret_winClient = re.findall(r'Win', self.name)
         if (ret_android):
-            self.queryIntervalTime = interval_time * 7
+            self.queryIntervalTime = interval_time * 0.5
         if (ret_ios):
-            self.queryIntervalTime = interval_time * 7
+            self.queryIntervalTime = interval_time * 0.5
         if (ret_ds):
-            self.queryIntervalTime = interval_time * 7
-        if (ret_winClient):
-            self.queryIntervalTime = interval_time * 7
+            self.queryIntervalTime = interval_time * 0.5
 
     def set_name(self, name):
         self.name = name
@@ -237,7 +233,6 @@ class SingPipelineInfo:
             ret_ios = re.findall(r'IOS', self.name)
             ret_ds = re.findall(r'DS', self.name)
             ret_winclient = re.findall(r'Win', self.name)
-            # print(self.name)
             if (ret_android):
                 package_str = re.findall(r'Shipping.*\.apk', artifact['name'])
                 # print(package_str)
@@ -271,7 +266,6 @@ class SingPipelineInfo:
                 if (package_str):
                     package_version = package_str[0]
                     self.appVersion = re.findall(r'\d+\.\d+\.\d+.\d+', package_version)[0]
-                    # print(self.appVersion)
                     break
         # print(self.appVersion)
 
@@ -292,6 +286,7 @@ class SingPipelineInfo:
                     self.qs_url = short_url
                     break
 
+
     def get_v4_user_artifactory_appDownloadUrl(self):
         # import requests_cache
         import time
@@ -311,7 +306,7 @@ class SingPipelineInfo:
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=/[P4_SVN][冒烟包]Android/464/Development/GNYX_Android_Development_Stable_0.2.648.74_Less_arm64_32_signed.apk"
 
         # request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
-        request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
+        request_url =  "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/" + self.projectId + "/artifactories/app_download_url?artifactoryType=CUSTOM_DIR&path=" + path
         # print(request_url)
         # time.sleep(4)
         access_token = self.set_access_token()
@@ -344,6 +339,10 @@ class SingPipelineInfo:
                 # return ret_json
         except requests.exceptions.ConnectionError:
             print('网络错误，请重新运行')
+
+
+
+
 
     def get_user_build_detail(self):
         request_url = "https://devops.apigw.o.woa.com/prod/v4/apigw-user/projects/afgame/build_histories?pipelineId=" + self.pipelineId + '&pageSize=40'
@@ -456,11 +455,11 @@ class SingPipelineInfo:
     #     return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n构建号：#' + str(
     #         self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
     def __str__(self):
-        if re.findall(r'DS', self.name) or re.findall(r'Win', self.name):
+        if re.findall(r'DS', self.name):
             return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n构建号：#' + str(
                 self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
         else:
-            return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n' + '[二维码：链接]' + '(' + self.qs_url + ')' + '\n构建号：#' + str(
+            return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')' + '\n' + '[二维码：链接]'+ '(' + self.qs_url + ')'  + '\n构建号：#' + str(
                 self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
             # return self.name + '\n' + '[流水线：链接]' + '(' + self.pipelineUrl + ')'  + '\n构建号：#' + str(
             #     self.buildNum) + '\n构建时间：' + self.buildTime + '\n版本号: ' + self.appVersion + '\n'
@@ -468,7 +467,6 @@ class SingPipelineInfo:
 
 def get_information(project_id, pipeline_id_dict, need_query_build_time):
     # pipeline_num = len(pipeline_id_dict)
-    build_time = ''
     single_pipeline_list = []
     if need_query_build_time != '':
         this_year = time.strftime("%Y-", time.localtime())
@@ -478,6 +476,7 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
 
     for pipeline_custom_name in pipeline_id_dict.keys():
         # print(pipeline_id_dict[pipeline_custom_name])
+        build_time = ''
         pipelineInfo = PipelineInfo()
         pipelineInfo.set_access_token()
         pipelineInfo.set_project_id(project_id)
@@ -533,19 +532,20 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
     # data_title = time.strftime('%m{m}%d{d}').format(m='月', d='日')
     # data_title_num = time.strftime('%Y{Y}%m{m}%d{d}').format(Y='', m='', d='')
 
-    name = (build_time.split(' ')[0]).split('-')
-    data_title = name[1] + "月" + name[2] + "日"
+    # name = (build_time.split(' ')[0]).split('-')
+    # data_title = name[1] + "月" + name[2] + "日"
+
 
     # append_info = '【GN_Dev_Stable】\n' + data_title + 'GN冒烟包版本信息' + '\n' + 'Stable分支：AClient: GNYX_Stable_' + data_title_num + '; AEngine: GNYX_Stable_' + data_title_num + '; AClient_Content: GNYX_Stable_' + data_title_num
-    append_info = '【GN_主干_Trunk】\n' + data_title + 'GN冒烟包版本信息'
-    print(append_info)
+    # append_info = '【GN_分支_GN001】\n' + data_title + ' GN001冒烟包版本信息'
+    # print(append_info)
     for single_pipeline in single_pipeline_list:
         print(single_pipeline)
 
     # print("服务器：主干_冒烟服(Dev)")
-    print("服务器：主干_稳定服(Dev)")
-    print(
-        "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)")
+    print("服务器：GN001分支_稳定服(Dev)")
+    # print("服务器：主干_稳定服(Shipping)")
+    # print("[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)")
     return single_pipeline_list
 
 
@@ -579,7 +579,7 @@ def send_request_bot_planning_developping_group_project(content_all, mentioned_l
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n" \
+                  + "服务器：主干_稳定服(Dev)\n"  \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -590,7 +590,6 @@ def send_request_bot_planning_developping_group_project(content_all, mentioned_l
     }
     headers = {'Content-Type': 'application/json'}
     requests.post(url=robot_url, headers=headers, json=send_data)
-
 
 def send_request_bot_planning_developping_group_build(content_all, mentioned_list=''):
     color_list_second = ['navy', 'pink', 'orange', 'olive', 'yellow', 'gray', 'gray', 'olive']
@@ -623,7 +622,7 @@ def send_request_bot_planning_developping_group_build(content_all, mentioned_lis
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n" \
+                  + "服务器：主干_稳定服(Dev)\n"  \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -634,7 +633,6 @@ def send_request_bot_planning_developping_group_build(content_all, mentioned_lis
     }
     headers = {'Content-Type': 'application/json'}
     requests.post(url=robot_url, headers=headers, json=send_data)
-
 
 def send_request_bot_planning_developping_group_build_problem(content_all, mentioned_list=''):
     color_list_second = ['navy', 'pink', 'orange', 'olive', 'yellow', 'gray', 'gray', 'olive']
@@ -667,7 +665,7 @@ def send_request_bot_planning_developping_group_build_problem(content_all, menti
 
     content_all = "<font color=" + color_list_second[
         number_color2] + " >" + ugc_game_name + "</font>" + '\n>' + content_all + mentioned_list_str \
-                  + "服务器：主干_稳定服(Dev)\n" \
+                  + "服务器：主干_稳定服(Dev)\n"  \
                   + "[美术策划“拉取编辑器”请使用“UGS工具”](https://doc.weixin.qq.com/doc/w3_ABgAPAZ8ACoK00jKpVEQKut1wWg1v?scode=AJEAIQdfAAo45j2suMABgAPAZ8ACo&version=4.1.0.6015&platform=win)"
 
     send_data = {
@@ -680,39 +678,35 @@ def send_request_bot_planning_developping_group_build_problem(content_all, menti
     requests.post(url=robot_url, headers=headers, json=send_data)
 
 
+
 if __name__ == '__main__':
     # https://devops.woa.com/console/pipeline/afgame/p-a2b6d794d23f48eab24dc78f4304f082/history   afgame是projectid,
     # pipelineId是p-a2b6d794d23f48eab24dc78f4304f082
     project_id = 'gngame'
+    # pipeline_id_dict = {
+    #     'Android': 'p-e99b004654974079a19600843ca8276e',
+    #     'IOS': 'p-8e677110a871423da93c7ac30c630539',
+    #     # 'WinClient': 'p-efd73cc2a661486a92d09e66588231ec',
+    #     'DS': 'p-3814917ef7494953a2604c8c83d3553c',
+    #     '【ASAN】IOS': 'p-d7479389af4c41c797d84084fbeafb6f',
+    #     '【ASAN】Android': 'p-1ea83f82e07d41fc95bb3ff6ab2571a5',
+    #     '【ASAN】DS': 'p-d13ae084fa384823abb25ce06a1a1af8'
+    # }
+
     pipeline_id_dict = {
-        'Android': 'p-e99b004654974079a19600843ca8276e',
-        'IOS': 'p-8e677110a871423da93c7ac30c630539',
-        'WinClient': 'p-d1a9faababf74c3da8485f5ab7366c1c',
-        'DS': 'p-3814917ef7494953a2604c8c83d3553c',
-        '【ASAN】IOS': 'p-d7479389af4c41c797d84084fbeafb6f',
-        '【ASAN】Android': 'p-1ea83f82e07d41fc95bb3ff6ab2571a5',
-        '【ASAN】DS': 'p-d13ae084fa384823abb25ce06a1a1af8'
+        'GN001_Android': 'p-61004333ede64d468ee70cb69bdbea2e',
+        'GN001_IOS': 'p-d5c0d20dfa4e4045afaccbaa8dd8d77e',
+        # 'WinClient': 'p-efd73cc2a661486a92d09e66588231ec',
+        'GN001_DS': 'p-45253d1dc7ed4df3bef94cdf98f48a2d',
+        '【GN001_ASAN】IOS': 'p-f65e1ae36f6a4bbcb0cba1e45a33f86d',
+        '【GN001_ASAN】Android': 'p-d4a4086e85f34706afe0379c16f0a9c1',
+        '【GN001_ASAN】DS': 'p-02282966887e46578377b3cb6e66ac8c'
     }
 
+
+
     # need_query_build_time = '04-11 23:04'  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
-    # need_query_build_time = ''   #例子,该值可为空字符串,表示查询最新的构建流水线信息
-    # import datetime
-    # today_date_str = datetime.datetime.today()
-    #
-    # need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
-
-    import datetime
-
-    today_date_str = datetime.datetime.today()
-    from bdateutil import isbday
-
-    # need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
-    need_query_build_time = ''  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
-
-    # yesterday_date_str = datetime.datetime.today() - datetime.timedelta(days=1)
-    # if not isbday(yesterday_date_str):
-    #     today_date_str = yesterday_date_str
-    # need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
+    need_query_build_time = '08-31 18:19'   #例子,该值可为空字符串,表示查询最新的构建流水线信息
 
     single_pipline_list = get_information(project_id, pipeline_id_dict, need_query_build_time)
     content_all = ''
