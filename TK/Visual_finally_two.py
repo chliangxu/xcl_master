@@ -35,7 +35,7 @@ class Timer:
         x = self.window.winfo_reqwidth()
         y = self.window.winfo_reqheight()
         # 设置初始位置
-        self.window.geometry("%dx%d+%d+%d" % (208, 56, 10, 10))
+        self.window.geometry("%dx%d+%d+%d" % (400, 200, 20, 20))
         # 修改图标(对启动速度有点影响)
         # self.window.iconbitmap('title.ico')
         # 主事件循环

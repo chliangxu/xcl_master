@@ -234,7 +234,7 @@ class SingPipelineInfo:
             ret_ds = re.findall(r'DS', self.name)
             ret_winclient = re.findall(r'Win', self.name)
             if (ret_android):
-                package_str = re.findall(r'Shipping.*\.apk', artifact['name'])
+                package_str = re.findall(r'^GNYX_Android_Shipping.*\.apk', artifact['name'])
                 # print(package_str)
                 package_path_str = re.findall(r'Shipping.*\.apk', artifact['path'])
                 self.package_path = artifact['path']
@@ -532,13 +532,13 @@ def get_information(project_id, pipeline_id_dict, need_query_build_time):
     # data_title = time.strftime('%m{m}%d{d}').format(m='月', d='日')
     # data_title_num = time.strftime('%Y{Y}%m{m}%d{d}').format(Y='', m='', d='')
 
-    # name = (build_time.split(' ')[0]).split('-')
-    # data_title = name[1] + "月" + name[2] + "日"
+    name = (build_time.split(' ')[0]).split('-')
+    data_title = name[1] + "月" + name[2] + "日"
 
 
     # append_info = '【GN_Dev_Stable】\n' + data_title + 'GN冒烟包版本信息' + '\n' + 'Stable分支：AClient: GNYX_Stable_' + data_title_num + '; AEngine: GNYX_Stable_' + data_title_num + '; AClient_Content: GNYX_Stable_' + data_title_num
-    # append_info = '【GN_分支_GN001】\n' + data_title + ' GN001冒烟包版本信息'
-    # print(append_info)
+    append_info = '【GN_分支_GN001】\n' + data_title + ' GN001冒烟包版本信息'
+    print(append_info)
     for single_pipeline in single_pipeline_list:
         print(single_pipeline)
 
@@ -706,7 +706,7 @@ if __name__ == '__main__':
 
 
     # need_query_build_time = '04-11 23:04'  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
-    need_query_build_time = '08-31 18:19'   #例子,该值可为空字符串,表示查询最新的构建流水线信息
+    need_query_build_time = ''   #例子,该值可为空字符串,表示查询最新的构建流水线信息
 
     single_pipline_list = get_information(project_id, pipeline_id_dict, need_query_build_time)
     content_all = ''

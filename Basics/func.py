@@ -1,6 +1,24 @@
 import os
 import string
 import random
+import time
+import json
+
+# 创建一个迭代器类
+class MyIterator:
+    def __init__(self, data):
+        self.data = data
+        self.index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index >= len(self.data):
+            raise StopIteration
+        value = self.data[self.index]
+        self.index += 1
+        return value
 
 
 class Func:
@@ -35,43 +53,41 @@ class Func:
         return finally_str
 
     # 生成器
-    def blocks(self, fobj):
-        """
-        使用场景：
-        :param fobj:
-        :return:
-        """
-        block = [] #保存中间结果的列表
-        counter = 0 #计数器，够8行返回
-        for line in fobj:
-            block.append(line)
-            counter += 1
-            if counter == 8:
-                yield block
-                block = []
-                counter = 0
-
-        if block:
-            yield block
-
-# with open(r"E:\bugly.txt", "r", encoding="utf-8") as f:
-#         for i in Func().blocks(f.readlines()):
-#             print(len(i), i)
+    """ 按块读取 """
+    def read_file_by_chunk(self, file, chunk_size=512):
+        with open(file, mode='r', encoding='utf-8') as f:
+            while True:
+                chunk = f.readline()
+                if not chunk:
+                    return
+                yield chunk
 
 
-# 创建一个迭代器类
-class MyIterator:
-    def __init__(self, data):
-        self.data = data
-        self.index = 0
+# start_time = time.time()
+# chunks = Func().read_file_by_chunk(r"E:\xcl\xcl_master\AC_output.ips")
+# # chunks = Func().read_file_by_chunk(r"E:\xcl\xcl_master\197_anr_trace_output_Release.txt")
+# lis = []
+# for chunk in chunks:
+#     print("/////////////////", type(chunk), chunk, end='',)
+#
+#     if "uuid" in chunk or "path" in chunk:
+#         lis.append(chunk)
+# # print(lis)
+# # print(len(lis))
+# for index, i in enumerate(lis):
+#     print(index, i)
+#     if "/AClient.app\/AClient" in i:
+#         print(index, i)
+#         print(lis[index - 1])
+#         break
 
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.index >= len(self.data):
-            raise StopIteration
-        value = self.data[self.index]
-        self.index += 1
-        return value
+    # if "/lib/arm64/libUE4.so" in chunk:
+    #     old_str = "("
+    #     new_str = " "
+    #     tw_str = ")"
+    #     finally_str = chunk.replace(old_str, new_str).replace(tw_str, new_str)
+    #     str_split = finally_str.split(" ")
+    #     print(str_split)
+    #     if str_split[-3] == "BuildId:":
+    #         lis.append(str_split[-2])
 
