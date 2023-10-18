@@ -59,7 +59,23 @@ btn.pack()
 
 mainloop()
 
-
+# pack的用法
+# https://codeleading.com/article/89642769387/
+# from tkinter import *
+#
+# tk = Tk()
+# tk.geometry("200x150")
+# oklabel = Label(tk, text="OK",  # 标签内容是0K
+#                 font="Times 20 bold",  # Times字型20粗体
+#                 fg="white", bg="blue")  # 蓝底白字
+# oklabel.pack(anchor=S, side=RIGHT,  # 从右开始在S方向设置
+#              padx=10, pady=10)  # x和y轴间距都是10
+# nolabel = Label(tk, text="NO",  # 标签内容是NO
+#                 font="Times 20 bold",  # Times字型20粗体
+#                 fg="white", bg="red")  # 蓝底白字
+# nolabel.pack(anchor=S, side=RIGHT,  # 从右开始在S方向设置
+#              pady=10)  # y轴间距都是10
+# tk.mainloop()
 
 
 

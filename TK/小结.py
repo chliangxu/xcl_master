@@ -1,4 +1,5 @@
 # 1.创建窗口实例
+# http://m.biancheng.net/view/jlwcjve.html
 # self.window = Tk()
 
 # 2.窗口的标题
