@@ -38,6 +38,82 @@ d.git常用命令
 　　git reflog  --查看所有变更记录
 
     git checkout --file // 撤销工作区的修改
+    //查看Git配置信息
+    git config -list
+    //设置用户名和密码（一般只需要设置一次）
+    git config --global user.name 'name'
+    git config --global user.email 'email'
+
+
+    //初始化
+    git init
+    //拉取远程master分支上内容
+     git stash save '备注信息'
+
+        //当前开发分支时，需要到另一个分支去更改一些东西，可以使用，然后直接切需要的分支就行，他会将第
+       //  一个分支东西存在stash中，不删除，不提交
+
+    git stash pop 弹出第一个 stash（该 stash 会从历史删除）
+
+    git stash apply 可以达到 git stash pop 的效果，但是 stash 会在 list 中，不会删除
+
+    git stash list 查看 stash 的列表
+
+    git stash apply stash 名 切换到具体的 stash
+
+    git fetch origin master
+    //提交本地文件到暂存区
+    git add .
+    //查看暂存区状态
+    git status
+    //比较暂存区和工作区的差异
+    git diff
+    //将暂存区内容添加到本地仓库中
+    git commit -m"注释"
+    //提交合并请求
+    git merge origin/master
+    //推送到远程分支
+    git push origin
+
+    //查看本地分支
+    git branch
+    //查看所有远程分支
+    git branch -r
+    //查看所有分支
+    git branch -a
+    //创建本地分支
+    git branch 分支名
+    //建立本地分支和远程分支的映射关系
+    git branch --set-upstream-to origin/分支名
+    //撤销本地分支与远程分支的映射关系
+    git branch --unset-upstream
+    //查看本地分支和远程分支的映射关系
+    git branch -vv
+    //创建新分支并立即切换到该分支下
+    git checkout -b 分支名
+    //删除本地分支
+    git branch -d 分支名
+    //删除远程分支
+    git push origin --delete 分支名
+    //同步远程分支
+    git fetch origin --prune
+    //切换分支
+    git checkout 分支名
+    //拉取远程信息（同步远程分支）
+    git pull
+    //查看历史提交记录
+    git log
+    //查看指定文件的修改记录
+    git blame 文件名
+    //打标签
+    git tag -a 标签名 -m"注释"
+    //关联远程地址
+    git remote add origin 远程地址
+    //解除关联
+    git remote rm origin
+    //查看所有远程仓库
+    git remote -v
+
 
 e.常用命令
 
