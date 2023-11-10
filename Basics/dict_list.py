@@ -68,5 +68,23 @@ class first_main:
             return True
         return False
 
-xcl = first_main()
-xcl.first_list()
+# 列表，字典，字符串之间的相互转化
+import json
+# a是什么？
+# 答：类型是字典，值(数据)是键值对数据(名称和年龄)
+a = {"name": "weiwei", "age": 18}
+
+# b是什么？
+# 答：类型是字符串，值(数据)是键值对数据(名称和年龄)
+b = '{"name": "weiwei", "age": 18}'
+
+# c是什么？
+# 答：列表嵌套元组(元组固定2个元素，第一个是key，第二个是value)；值(数据)是键值对数据(名称和年龄)
+c = [("name", "weiwei"), ("age", 18)]
+
+# 上述a和b之间是可以转化的；
+# b = json.dumps(a)
+# a、b和c之间的转化；
+a = dict(c)
+print(a)
+# b = json.dumps(a)

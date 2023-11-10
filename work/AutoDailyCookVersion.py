@@ -707,7 +707,7 @@ if __name__ == '__main__':
     from bdateutil import isbday
 
     # need_query_build_time = today_date_str.strftime('%m-%d') + ' 0:01'
-    need_query_build_time = '10-12 22:49'  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
+    need_query_build_time = ''  # 例子,该值可为空字符串,表示查询最新的构建流水线信息
 
     # yesterday_date_str = datetime.datetime.today() - datetime.timedelta(days=1)
     # if not isbday(yesterday_date_str):
