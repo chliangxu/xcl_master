@@ -41,7 +41,7 @@ class MY_GUI():
         self.target_label = Label(self.FM1, text="平台:")
         self.target_label.grid(row=0, column=0, sticky=NW)
 
-        self.TP1 = RADIOBUTTON(self.FM1, Text=)
+        # self.TP1 = RADIOBUTTON(self.FM1, Text=)
 
 
 
