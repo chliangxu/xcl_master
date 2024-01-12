@@ -1,2 +1,0 @@
-D:\C++\C语言\Debug\C语言.exe
-D:\C++\C++\Debug\C语言.exe
