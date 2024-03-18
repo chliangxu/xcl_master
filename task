@@ -30,3 +30,56 @@ UE4虚幻引擎的术语理解
 Django, mysql的一些操作
 创建子应用名称
 python manage.py startapp 子应用名称
+
+腾讯云机器环境的处理
+腾讯云机器环境的安装
+https://blog.csdn.net/kuizuo12/article/details/126681533
+rpm -qa |grep yum 检查yum是否安装
+
+rpm -qa|grep python|xargs rpm -ev --allmatches --nodeps 强制删除已安装python及其关联
+
+
+安装python3.xxx的环境
+# 查看python的执行位置
+
+which python
+
+# 安装依赖,使用yum安装
+
+yum -y groupinstall "Development tools"
+
+yum -y install zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel
+
+# 下载python3的安装包
+
+wget -c https://www.python.org/ftp/python/3.7.0/Python-3.7.0.tgz
+
+# 创建安装目录
+
+mkdir /usr/local/python3
+
+# 解压安装包
+
+tar -zxvf Python-3.7.0.tgz
+
+# 进入解压目录
+
+cd Python-3.7.0
+
+# 编译源码包代码，--prefix参数，指定稍后源码包程序的安装路径
+
+./configure --prefix=/usr/local/python3
+
+# 生成二进制安装程序
+
+make
+
+# 运行二进制的服务程序安装包
+
+make install
+
+注意，在这里可能会报以下错误
+
+File "/usr/local/src/Python-3.7.0/Lib/ctypes/__init__.py", line 7, in <module> from _ctypes import Union, Structure, Array ModuleNotFoundError: No module named ‘_ctypes‘ make: *** [install] Error 1
+
+安装libffi-devel即可解决，yum install libffi-devel，安装完记得再次运行 make install
