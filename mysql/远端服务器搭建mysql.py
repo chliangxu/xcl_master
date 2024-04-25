@@ -6,10 +6,13 @@
 # （首先进入管理员）
 # su,之后输入机器的密码
 
-# wget http://repo.mysql.com/mysql57-community-release-el7-8.noarch.rpm
-# rpm -ivh mysql57-community-release-el7-8.noarch.rpm
-# cd yum.repos.d
-# yum install mysql-server
+# 安装mysql的版本(centos)
+# https://blog.csdn.net/Mortal3306/article/details/137372484
+
+# 删除版本
+# https://blog.51cto.com/u_16213408/8973730
+
+# rm -rf /var/log/mysqld.log
 
 # 查看mysql版本
 # mysql -V
@@ -19,24 +22,33 @@
 # service mysqld status
 # 获取临时密码
 # grep “password” /var/log/mysqld.log
+# 若进不去mysql
+# vim /etc/my.cnf
+# 输入skip-grant-tables
+
+# 查看用户
+# select host, user from user;
+# DELETE FROM user WHERE user = 'root' AND host = '%';
+# update user set host='%' where user='root';
+# 让最后的root的权限调整为%
+
 
 # 进入mysql
 # 更改密码
+# SHOW VARIABLES LIKE 'validate_password%';
 # set global validate_password_policy=0;
 # set global validate_password_length=1;
 # set global validate_password_mixed_case_count=2;
-# SET PASSWORD = PASSWORD(‘你的密码’);
-# set global validate_password_policy=LOW;
-# ALTER USER ‘root’@'localhost’PASSWORD EXPIRE NEVER;
 # 然后刷新
 # flush privileges;
+# alter user 'root'@'localhost' identified by '满足策略的密码';
 # 退出
 # exit;
 
+# 高版本不能用(8.0及以上)因为创建用户和授权分开了
+# create user '用户名'@'%' identified by '密码';
 # 开启远程所有IP访问
-# grant all privileges on *.* to root@"%" identified by “你的密码*”;
-# 开启本地访问
-# grant all privileges on *.* to root@“localhost” identified by “你的密码”;
+# grant all privileges on *.* to '用户名'@'%';
 # 然后刷新
 # flush privileges;
 # 退出
