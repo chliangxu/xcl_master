@@ -57,3 +57,13 @@ while True:
     if threading.active_count() == 1:
         print("I will restart t")
         # t.start()
+
+    """
+    线程具有一个daemon属性，可以手动设置为True或False，也可以不设置，则取默认值None
+    如果不设置daemon，就取当前线程的daemon来设置它
+    主线程是non-daemon线程，即daemon=False
+    从主线程创建的所有线程的不设置daemon属性，则默认都是daemon=False，也就是non-
+    daemon线程
+    Python程序在没有活着的non-daemon线程运行时，程序退出，也就是除主线程之外剩下的只能
+    都是daemon线程，主线程才能退出，否则主线程就只能等待
+    """

@@ -1,0 +1,4 @@
+﻿  zhizhen.cpp
+D:\xcl_python\xcl_master\C语言\01_C\01_C\zhizhen.cpp(43,10): warning C4477: “printf”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“int *”
+D:\xcl_python\xcl_master\C语言\01_C\01_C\zhizhen.cpp(49,10): warning C4477: “printf”: 格式字符串“%s”需要类型“char *”的参数，但可变参数 1 拥有了类型“int *”
+  01_C.vcxproj -> D:\xcl_python\xcl_master\C语言\01_C\Debug\01_C.exe

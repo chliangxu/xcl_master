@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script>
+        var arr = [1,2,3,4,8,9,5,8, 89, 784, 69, 99];
+        // 用 j=0是第一种办法
+        // var j = 0;
+        // 刚开始newarr.length = 0
+        var newarr = [];
+        for (i = 0; i < arr.length; i++){
+            if (arr[i] > 8){
+                /*
+                newarr[j] = arr[i]
+                j++;
+                */
+               newarr[newarr.length] = arr[i]
+            }
+        }
+        console.log(newarr)
+    </script>
+</head>
+<body>
+    <h1>筛选数组</h1>
+</body>
+</html>

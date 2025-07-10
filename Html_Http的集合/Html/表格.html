@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table{
+            width: 500px;
+            margin: 100px auto;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        td,
+        th{
+            border: 1px solid #333;
+        }
+        thead tr{
+            height: 40px;
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <table id = "table", cellspacing="0">
+    <thead>
+    <tr>
+        <th>姓名</th>
+        <th>科目</th>
+        <th id ="myButton">成绩</th>
+    </tr>
+</thead>
+<tbody>
+
+</tbody>
+</table>
+<script>
+    var datas = [{
+        name:"张三",
+        subject:"Javascrupt",
+        score:98
+      },{
+        name:"李四",
+        subject:"Javascrupt",
+        score:99
+      },{
+        name:"王五",
+        subject:"Javascrupt",
+        score:100
+      }
+    ]
+      var tbody = document.querySelector("tbody")
+      for (var i = 0; i < datas.length; i++){ // 外层for循环决定行
+        var tr = document.createElement('tr');
+        tbody.appendChild(tr);
+        for (var k in datas[i]){ // 里面的for循环管列td
+            var td = document.createElement('td');
+            td.innerHTML = datas[i][k];
+            tr.appendChild(td)
+        }
+    }
+    console.log("document", document)
+    //var div = document.getElementById("myDiv");
+    var button = document.createElement("button");
+    button.id = 'myButton';
+    button.textContent = '修改成绩';
+    // 添加点击事件监听器
+    button.addEventListener('click', function() {
+        alert('按钮被点击了！');
+    });
+    // 将按钮添加到body中
+    document.getElementById("myButton").appendChild(button);
+
+    
+  
+</script>
+
+</body>
+</html>
