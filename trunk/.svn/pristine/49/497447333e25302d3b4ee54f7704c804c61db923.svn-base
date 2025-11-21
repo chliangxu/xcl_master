@@ -1,0 +1,7 @@
+"""
+协同表格控制器包
+"""
+
+from .collaborative_table_controller import CollaborativeTableController
+
+__all__ = ['CollaborativeTableController']

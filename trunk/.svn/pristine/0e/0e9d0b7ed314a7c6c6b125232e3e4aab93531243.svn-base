@@ -1,0 +1,199 @@
+import os
+import urllib.request
+import subprocess
+import shutil
+
+from PyQt5.QtWidgets import QMessageBox
+
+from src.core import LogSystem, EventSystem
+from src.modules.project.controller.project_events import ProjectEvents
+from src.modules.project.controller.project_macros import ProjectMacros
+
+
+class ProjectDownloadLogic:
+    download_dir = "C:\\DevTools"
+    # 下载文件函数
+    def download_file(self, url, filename, downloaded_path):
+        try:
+            LogSystem.instance().info(f"开始下载 Visual Studio 安装程序...")
+            LogSystem.instance().info(f"下载链接: {url}")
+
+            # 获取文件大小
+            with urllib.request.urlopen(url) as response:
+                total_size = int(response.info().get('Content-Length', 0))
+
+            # 开始下载
+            urllib.request.urlretrieve(url, filename, reporthook=lambda count, block_size, total_size=total_size:
+            self.download_progress(count, block_size, total_size))
+
+            os.rename(filename, downloaded_path)
+            LogSystem.instance().info("\n下载完成!")
+            return True
+        except Exception as e:
+            LogSystem.instance().info(f"\n下载失败: {e}")
+            return False
+
+    # 下载进度回调函数
+    @staticmethod
+    def download_progress(count, block_size, total_size):
+        progress_dict = {"count": count, "block_size": block_size, "total_size": total_size}
+        EventSystem.instance().send_event(ProjectEvents.DOWNLOAD_TOOLS_PROGRESS, progress_dict)
+        # percent = int(count * block_size * 100 / total_size)
+        # LogSystem.instance().info(f"\r下载进度: {percent}% [{count * block_size / (1024 * 1024):.2f}MB/{total_size / (1024 * 1024):.2f}MB]")
+
+
+    def install(self, installer_path):
+        """根据文件类型调用相应的安装函数"""
+        if not os.path.exists(installer_path):
+            print(f"❌ 安装文件不存在: {installer_path}")
+            return False
+
+        file_extension = os.path.splitext(installer_path)[1].lower()
+
+        if file_extension == '.msi':
+            return self.install_msi(installer_path)
+        elif file_extension == '.exe':
+            return self.install_exe(installer_path)
+        else:
+            print(f"❌ 不支持的安装文件格式: {file_extension}")
+            return False
+
+    @staticmethod
+    def install_msi(installer_path):
+        """安装MSI文件[1,9](@ref)"""
+        try:
+            LogSystem.instance().info("\n开始安装 MSI 包...")
+            LogSystem.instance().info("正在进行静默安装，请稍候...")
+
+            # 使用msiexec命令安装MSI[1,9](@ref)
+            # /i: 安装包
+            # /qn: 无界面静默安装[1](@ref)
+            # /norestart: 安装后不重启[9](@ref)
+            # command = ['msiexec', '/i', installer_path, '/qn', '/norestart']
+            command = ['msiexec', '/i', installer_path]
+
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            LogSystem.instance().info("安装进行中...")
+            # 等待安装完成
+            stdout, stderr = process.communicate(timeout=1800)  # 30分钟超时
+
+            if process.returncode == 0:
+                LogSystem.instance().info("\n✅ MSI 安装成功!")
+                return True
+            else:
+                LogSystem.instance().info(f"\n❌ MSI 安装失败，返回码: {process.returncode}")
+                if stderr:
+                    LogSystem.instance().info(f"错误信息: {stderr}")
+                return False
+
+        except subprocess.TimeoutExpired:
+            print("\n⚠️ 安装超时，但可能仍在后台进行中...")
+            return True
+        except Exception as e:
+            print(f"\n❌ 安装过程中发生错误: {e}")
+            return False
+
+    # 安装程序函数
+    @staticmethod
+    def install_exe(installer_path):
+        try:
+            LogSystem.instance().info("\n开始安装 Visual Studio...")
+            LogSystem.instance().info("这可能需要较长时间，请耐心等待...")
+            # 这里使用一个简化的安装命令
+            # command = [
+            #     installer_path,
+            #     '--quiet',
+            #     '--norestart',
+            #     '--wait',
+            #     '--add', 'Microsoft.VisualStudio.Workload.ManagedDesktop',
+            #     '--add', 'Microsoft.VisualStudio.Workload.NetWeb',
+            #     '--add', 'Microsoft.VisualStudio.Workload.Universal',
+            #     '--add', 'Microsoft.VisualStudio.Workload.Azure',
+            #     '--add', 'Microsoft.VisualStudio.Workload.Python',
+            #     '--includeRecommended'
+            # ]
+            command = [
+                installer_path
+            ]
+
+            # 启动安装程序
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            # 实时显示安装进度
+            print("安装进度:")
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.strip())
+
+            # 等待安装完成
+            process.wait()
+
+            if process.returncode == 0:
+                LogSystem.instance().info("\nVisual Studio 安装成功!")
+                return True
+            else:
+                LogSystem.instance().info(f"\n安装失败，错误代码: {process.returncode}")
+                return False
+        except Exception as e:
+            LogSystem.instance().info(f"安装过程中发生错误: {e}")
+            return False
+
+    def download_and_install_by_tools_id(self, tools_id):
+        if tools_id == ProjectMacros.INSTALL_INDEX_SVN:
+            self.download_and_install_svn()
+        elif tools_id == ProjectMacros.INSTALL_INDEX_VS:
+            self.download_and_install_vs()
+        elif tools_id == ProjectMacros.INSTALL_INDEX_VS_CODE:
+            self.download_and_install_vs_code()
+        elif tools_id == ProjectMacros.INSTALL_INDEX_P4:
+            self.download_and_install_p4()
+
+    def download_and_install_p4(self):
+        download_url = "https://filehost.perforce.com/perforce/r25.3/bin.ntx64/p4vinst64.exe"
+        installer_name = "p4vinst64.exe"
+        self.download_and_install(download_url, installer_name)
+
+    def download_and_install_svn(self):
+        download_url = "https://git.tencent.com/SVN/TortoiseSVN/Preview/TortoiseSVN-Preview-x64.msi"
+        installer_name = "TortoiseSVN-Preview-x64.msi"
+        self.download_and_install(download_url, installer_name)
+
+    def download_and_install_vs_code(self):
+        download_url = "https://vscode.download.prss.microsoft.com/dbazure/download/stable/cb1933bbc38d329b3595673a600fab5c7368f0a7/VSCodeUserSetup-x64-1.106.1.exe"
+        installer_name = "VSCodeUserSetup-x64-1.106.1.exe"
+        self.download_and_install(download_url, installer_name)
+
+    def download_and_install_vs(self):
+        download_url = "https://aka.ms/vs/17/release/vs_professional.exe"
+        installer_name = "vs_professional.exe"
+        self.download_and_install(download_url, installer_name)
+
+    def download_and_install(self, download_url, installer_name):
+        installer_path = os.path.join(self.download_dir, installer_name)
+        downloaded_name = "download_" + installer_name
+        downloaded_path = os.path.join(self.download_dir, downloaded_name)
+
+        if not os.path.exists(self.download_dir):
+            os.makedirs(self.download_dir)
+
+        if not os.path.exists(downloaded_path):
+            LogSystem.instance().info("[project] 文件%s不存在，将直接尝试下载，链接是%s" % (installer_path, download_url))
+            if not self.download_file(download_url, installer_path, downloaded_path):
+                LogSystem.instance().info("下载失败，无法继续安装")
+                return
+        else:
+            LogSystem.instance().info("[project] 文件%s已存在，将直接尝试安装" % installer_path)
+
+        # QMessageBox.warning(self, "提示", "%s已下载完成，现在安装吗？" % installer_name)
+        reply = QMessageBox.question(None, '安装确认',  "%s已下载完成，现在安装吗？" % installer_name,  QMessageBox.Yes | QMessageBox.No,  QMessageBox.No)
+        if reply == QMessageBox.Yes:
+            if not self.install(downloaded_path):
+                LogSystem.instance().info("安装失败")
+                return
+        else:
+            LogSystem.instance().info("[project] 安装已取消")  # 用户选择取消
+        LogSystem.instance().info("\n操作完成! 已成功安装")

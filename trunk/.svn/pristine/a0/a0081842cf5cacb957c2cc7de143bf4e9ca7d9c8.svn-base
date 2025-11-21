@@ -1,0 +1,117 @@
+from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QButtonGroup, QSpacerItem, QSizePolicy, QLabel
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont, QIcon
+from src.common.base import BaseWidget
+from src.core import ConfigSystem, DataService
+
+
+class SidebarWidget(BaseWidget):
+    category_changed = pyqtSignal(str)
+
+    MODULE_CONFIG = [
+        {"name": "工程模块", "icon": "👥", "module_key": "Project"},
+        {"name": "工具模块", "icon": "👥", "module_key": "Tools"},
+        {"name": "权限管理", "icon": "👥", "module_key": "PermissionManager"},
+        {"name": "协同表格", "icon": "👥", "module_key": "CollaborativeSheet"},
+        {"name": "任务模块", "icon": "👥", "module_key": "Task"},
+        {"name": "通知模块", "icon": "👥", "module_key": "Notification"},
+        {"name": "版本信息", "icon": "👥", "module_key": "VersionInfo"},
+    ]
+
+    def init_ui(self):
+        cfg = self.cfg()
+
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        self.button_group = QButtonGroup()
+        self.category_buttons = {}
+
+        for i, module in enumerate(self.MODULE_CONFIG):
+            btn = QPushButton(f"  {module['icon']}  {module['name']}")
+            btn.setCheckable(True)
+            btn.setProperty("module_key", module['module_key'])
+            btn.clicked.connect(lambda checked, k=module['module_key']: self.category_changed.emit(k))
+            btn.setFont(self.get_default_font(cfg.fonts.size_default))
+            self.button_group.addButton(btn, i)
+            main_layout.addWidget(btn)
+            self.category_buttons[module['module_key']] = btn
+
+            if i == 0:
+                btn.setChecked(True)
+
+        main_layout.addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+
+    def update_module_visibility(self):
+        data_service = DataService.get_instance()
+        permission_repo = data_service.permission_repository
+        user_repo = data_service.user_repository
+
+        if not permission_repo or not user_repo:
+            return
+
+        current_user = user_repo.get_current_user()
+        if not current_user:
+            return
+
+        first_visible_key = None
+
+        for module_key, btn in self.category_buttons.items():
+            module_permission_key = btn.property("module_key")
+            
+            if module_permission_key is None:
+                btn.setVisible(True)
+                if first_visible_key is None:
+                    first_visible_key = module_key
+            else:
+                has_permission = permission_repo.has_module_permission(
+                    current_user.id, 
+                    module_permission_key
+                )
+                btn.setVisible(has_permission)
+                
+                if has_permission and first_visible_key is None:
+                    first_visible_key = module_key
+
+        if first_visible_key and not any(btn.isChecked() and btn.isVisible() 
+                                          for btn in self.category_buttons.values()):
+            self.category_buttons[first_visible_key].setChecked(True)
+            self.category_changed.emit(first_visible_key)
+
+    def set_active_category(self, module_key: str):
+        if module_key in self.category_buttons:
+            self.category_buttons[module_key].setChecked(True)
+
+    def apply_styles(self):
+        cfg = self.cfg()
+
+        self.setStyleSheet(f"""
+            SidebarWidget {{
+                background-color: {self.get_secondary_background()};
+                border-right: {cfg.styles.border_width}px solid {self.get_border_color()};
+            }}
+            QPushButton {{
+                background-color: {cfg.colors.transparent};
+                border: none;
+                color: {self.get_secondary_text_color()};
+                font-size: {cfg.fonts.size_default}px;
+                font-weight: bold;
+                padding: 15px 20px;
+                text-align: left;
+                border-radius: {cfg.styles.border_radius_small}px;
+                margin: 3px 10px;
+                min-height: 20px;
+            }}
+            QPushButton:hover {{
+                background-color: {cfg.colors.dark_gray};
+                color: {self.get_text_color()};
+            }}
+            QPushButton:checked {{
+                background-color: {self.get_primary_color()};
+                color: {cfg.colors.black};
+            }}
+            QPushButton:checked:hover {{
+                background-color: {cfg.colors.primary_active};
+            }}
+        """)

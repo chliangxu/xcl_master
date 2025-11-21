@@ -1,0 +1,41 @@
+"""
+协同表格模块 - MVC架构实现
+
+包含以下组件：
+- CollaborativeTableView: 主视图类（继承自BaseView）
+- CollaborativeTableController: 控制器类（继承自BaseController）
+- CollaborativeTableModel: 模型类（继承自BaseModel）
+
+使用方法：
+```python
+from src.modules.collaborative_table import (
+    CollaborativeTableView, 
+    CollaborativeTableController, 
+    CollaborativeTableModel
+)
+
+# 创建MVC组件
+model = CollaborativeTableModel()
+view = CollaborativeTableView()
+controller = CollaborativeTableController()
+
+# 设置关联
+controller.set_model(model)
+controller.set_view(view)
+
+# 初始化
+controller.initialize()
+```
+"""
+
+from .model import CollaborativeTableModel
+from .controller import CollaborativeTableController
+from .view import CollaborativeTableView, CollaborativeTableWidget, Ui_CollaborativeTableWidget
+
+__all__ = [
+    'CollaborativeTableModel',
+    'CollaborativeTableController', 
+    'CollaborativeTableView',
+    'CollaborativeTableWidget',
+    'Ui_CollaborativeTableWidget'
+]

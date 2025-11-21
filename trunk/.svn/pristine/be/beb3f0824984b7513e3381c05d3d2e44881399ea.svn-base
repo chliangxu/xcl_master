@@ -1,0 +1,96 @@
+from typing import Dict, Any, Optional
+from abc import ABCMeta, abstractmethod
+from PyQt5.QtCore import QObject, pyqtSignal
+
+
+class ModuleMeta(type(QObject), ABCMeta):
+    pass
+
+
+class BaseModule(QObject, metaclass=ModuleMeta):
+    module_initialized = pyqtSignal()
+    module_activated = pyqtSignal()
+    module_deactivated = pyqtSignal()
+    module_destroyed = pyqtSignal()
+    module_error = pyqtSignal(str)
+
+    def __init__(self, module_name: str, dependencies: Optional[Dict[str, Any]] = None):
+        super().__init__()
+        self._module_name = module_name
+        self._dependencies = dependencies or {}
+        self._is_initialized = False
+        self._is_active = False
+        self._controller = None
+        self._view = None
+        self._model = None
+
+    @property
+    def module_name(self) -> str:
+        return self._module_name
+
+    @property
+    def is_initialized(self) -> bool:
+        return self._is_initialized
+
+    @property
+    def is_active(self) -> bool:
+        return self._is_active
+
+    @property
+    def controller(self):
+        return self._controller
+
+    @property
+    def view(self):
+        return self._view
+
+    @property
+    def model(self):
+        return self._model
+
+    @abstractmethod
+    def initialize(self) -> bool:
+        pass
+
+    def activate(self) -> bool:
+        if not self._is_initialized:
+            return False
+        if self._is_active:
+            return True
+        try:
+            self._is_active = True
+            self.module_activated.emit()
+            return True
+        except Exception as e:
+            self.module_error.emit(f"模块激活失败: {e}")
+            return False
+
+    def deactivate(self) -> bool:
+        if not self._is_active:
+            return True
+        try:
+            self._is_active = False
+            self.module_deactivated.emit()
+            return True
+        except Exception as e:
+            self.module_error.emit(f"模块停用失败: {e}")
+            return False
+
+    def destroy(self):
+        try:
+            self.deactivate()
+            if self._view:
+                self._view.deleteLater()
+            if self._controller:
+                self._controller.deleteLater()
+            if self._model:
+                self._model.deleteLater()
+            self.module_destroyed.emit()
+        except Exception as e:
+            self.module_error.emit(f"模块销毁失败: {e}")
+
+    def get_config(self) -> Dict[str, Any]:
+        return {}
+
+    def set_config(self, config: Dict[str, Any]):
+        pass

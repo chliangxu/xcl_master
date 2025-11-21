@@ -1,0 +1,7 @@
+"""
+协同表格模型包
+"""
+
+from .collaborative_table_models import CollaborativeTableModel
+
+__all__ = ['CollaborativeTableModel']

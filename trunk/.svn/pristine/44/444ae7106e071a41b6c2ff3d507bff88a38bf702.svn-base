@@ -1,0 +1,62 @@
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QTabWidget, QLabel
+from src.common.base import BaseWidget
+
+
+class ProjectModuleView(BaseWidget):
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        self.tab_widget = QTabWidget()
+        
+        install_tab = QWidget()
+        install_layout = QVBoxLayout(install_tab)
+        install_layout.addWidget(QLabel("工具安装"))
+        
+        config_tab = QWidget()
+        config_layout = QVBoxLayout(config_tab)
+        config_layout.addWidget(QLabel("工程配置"))
+        
+        build_tab = QWidget()
+        build_layout = QVBoxLayout(build_tab)
+        build_layout.addWidget(QLabel("工程构建"))
+        
+        info_tab = QWidget()
+        info_layout = QVBoxLayout(info_tab)
+        info_layout.addWidget(QLabel("工程信息"))
+        
+        self.tab_widget.addTab(install_tab, "工具安装")
+        self.tab_widget.addTab(config_tab, "工程配置")
+        self.tab_widget.addTab(build_tab, "工程构建")
+        self.tab_widget.addTab(info_tab, "工程信息")
+        
+        layout.addWidget(self.tab_widget)
+        
+    def apply_styles(self):
+        cfg = self.cfg()
+        
+        self.setStyleSheet(f"""
+            ProjectModuleView {{
+                background-color: {cfg.colors.background};
+            }}
+            QTabWidget::pane {{
+                border: 1px solid {self.get_border_color()};
+                background-color: {cfg.colors.background};
+            }}
+            QTabBar::tab {{
+                background-color: {cfg.colors.surface};
+                color: {cfg.colors.text_secondary};
+                padding: 10px 20px;
+                margin-right: 2px;
+                border: 1px solid {self.get_border_color()};
+                border-bottom: none;
+            }}
+            QTabBar::tab:selected {{
+                background-color: {cfg.colors.background};
+                color: {self.get_primary_color()};
+                border-bottom: 2px solid {self.get_primary_color()};
+            }}
+            QTabBar::tab:hover {{
+                background-color: {cfg.colors.surface_hover};
+            }}
+        """)

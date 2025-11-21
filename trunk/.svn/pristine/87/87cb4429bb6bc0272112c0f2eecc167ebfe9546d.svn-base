@@ -1,0 +1,121 @@
+from typing import Any, Callable, Optional, Dict, Set
+from PyQt5.QtCore import QObject, pyqtSignal
+
+
+class BaseController(QObject):
+    error_occurred = pyqtSignal(str)
+    status_changed = pyqtSignal(str)
+    data_updated = pyqtSignal()
+
+    CORE_DEPENDENCIES: Set[str] = {"config", "data_service"}
+    OPTIONAL_DEPENDENCIES: Set[str] = set()
+    MODULE_KEY: str = None
+
+    def __init__(self, dependencies: Optional[Dict[str, Any]] = None, parent: Optional[QObject] = None):
+        super().__init__(parent)
+        self._dependencies = dependencies or {}
+        self._initialized = False
+        self._registered_events = []
+        self._inject_core_services()
+
+    def _inject_core_services(self):
+        from src.core.log import LogSystem
+        from src.core.event import EventSystem
+        from src.core import ConfigSystem, DataService
+
+        self.log = LogSystem.instance()
+        self.events = EventSystem.instance()
+        self.config = self._dependencies.get("config") or ConfigSystem.instance()
+        self.data_service = self._dependencies.get("data_service") or DataService.get_instance()
+
+    @property
+    def is_initialized(self) -> bool:
+        return self._initialized
+
+    @property
+    def name(self) -> str:
+        class_name = self.__class__.__name__
+        return class_name.replace('Logic', '').replace('Controller', '').lower()
+
+    def get_module_view(self):
+        return None
+
+    def initialize(self) -> bool:
+        self._initialized = True
+        return True
+
+    def shutdown(self):
+        self.clear_events()
+        self._initialized = False
+
+    def register_event(self, event_name: str, callback: Callable):
+        self.events.register_event(event_name, callback)
+        self._registered_events.append((event_name, callback))
+
+    def unregister_event(self, event_name: str, callback: Callable):
+        self.events.unregister_event(event_name, callback)
+        if (event_name, callback) in self._registered_events:
+            self._registered_events.remove((event_name, callback))
+
+    def send_event(self, event_name: str, data: Any = None):
+        self.events.send_event(event_name, data)
+
+    def clear_events(self):
+        for event_name, callback in self._registered_events:
+            self.events.unregister_event(event_name, callback)
+        self._registered_events.clear()
+
+    def get_dependency(self, name: str, required: bool = False) -> Optional[Any]:
+        dep = self._dependencies.get(name)
+        if required and dep is None:
+            raise ValueError(f"{self.__class__.__name__} 缺少必需依赖: {name}")
+        return dep
+
+    def safe_execute(self, func: Callable, *args, **kwargs) -> Any:
+        try:
+            return func(*args, **kwargs)
+        except Exception as error:
+            self.emit_error(f"执行失败: {error}")
+            return None
+
+    def emit_error(self, message: str):
+        from src.core.event import Events
+        module_name = self.MODULE_KEY if self.MODULE_KEY else self.name
+        self.log.error(f"[{module_name}] {message}")
+        self.error_occurred.emit(message)
+        self.send_event(Events.MODULE_ERROR, {"module": module_name, "message": message})
+
+    def emit_status(self, message: str):
+        from src.core.event import Events
+        module_name = self.MODULE_KEY if self.MODULE_KEY else self.name
+        self.log.info(f"[{module_name}] {message}")
+        self.status_changed.emit(message)
+        self.send_event(Events.MODULE_STATUS, {"module": module_name, "message": message})
+
+    def emit_data_updated(self):
+        from src.core.event import Events
+        module_name = self.MODULE_KEY if self.MODULE_KEY else self.name
+        self.data_updated.emit()
+        self.send_event(Events.MODULE_DATA_UPDATED, {"module": module_name})
+
+    @property
+    def _log(self):
+        return self.log
+
+    @property
+    def _events(self):
+        return self.events
+
+    def has_permission(self) -> bool:
+        if not self.MODULE_KEY:
+            return True
+        permission_repo = self.data_service.permission_repository
+        if not permission_repo:
+            return True
+        user_repo = self.data_service.user_repository
+        if not user_repo:
+            return True
+        current_user = user_repo.get_current_user()
+        if not current_user:
+            return True
+        return permission_repo.has_module_permission(current_user.id, self.MODULE_KEY)

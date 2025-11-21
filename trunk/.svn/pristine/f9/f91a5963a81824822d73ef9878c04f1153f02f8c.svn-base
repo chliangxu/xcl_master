@@ -1,0 +1,157 @@
+from src.common.base import BaseController
+from src.core.event import Events
+from src.modules.permission_manager.model.permission_models import PermissionRepository
+from src.modules.permission_manager.view.permission_module_view import PermissionModuleView
+from typing import Dict, Optional
+from PyQt5.QtWidgets import QMessageBox
+
+
+class PermissionManagerController(BaseController):
+    MODULE_KEY = "PermissionManager"
+
+    def __init__(self, dependencies: Optional[Dict[str, object]] = None):
+        super().__init__(dependencies)
+        self._permission_repo = PermissionRepository.get_instance()
+        self.data_service.register_repository('permission', self._permission_repo)
+        self._module_view = None
+        self._current_group_id = None
+        self._register_events()
+
+    def get_module_view(self):
+        if not self._module_view:
+            self._module_view = PermissionModuleView()
+            self._connect_view_signals()
+            self._load_current_user_permissions()
+            self._load_all_groups()
+        return self._module_view
+
+    def _connect_view_signals(self):
+        self._module_view.permission_changed.connect(self._load_current_user_permissions)
+        self._module_view.group_selected.connect(self._on_group_selected)
+        self._module_view.add_user_button_clicked.connect(self._on_add_user_button_clicked)
+        self._module_view.group_create_requested.connect(self._on_create_group)
+        self._module_view.group_permission_updated.connect(self._on_update_group_permissions)
+        self._module_view.user_add_to_group.connect(self._on_add_user_to_group)
+        self._module_view.user_remove_from_group.connect(self._on_remove_user_from_group)
+
+    def _register_events(self):
+        self.register_event(Events.USER_INFO_CHANGED, self._on_user_changed)
+
+    def _on_user_changed(self, user):
+        self._permission_repo.load_user_permissions(user.id)
+        self.log.info(f"已加载用户权限: {user.id}")
+        if self._module_view:
+            self._load_current_user_permissions()
+
+    def _load_current_user_permissions(self):
+        user_repo = self.data_service.user_repository
+        if not user_repo:
+            return
+
+        current_user = user_repo.get_current_user()
+        if not current_user:
+            return
+
+        self._module_view.set_current_user(current_user.name)
+        user_groups = self._permission_repo.get_user_groups(current_user.id)
+        self._module_view.set_user_groups(user_groups)
+        permission = self._permission_repo.get_permission(current_user.id)
+        if not permission:
+            permission = self._permission_repo.load_user_permissions(current_user.id)
+        all_modules = self._permission_repo.get_all_modules()
+        user_modules = self._filter_user_modules(all_modules, permission.modules)
+        self._module_view.set_user_permissions(user_modules)
+
+    def _filter_user_modules(self, modules, user_module_keys):
+        result = []
+        for module in modules:
+            if module.module_key in user_module_keys:
+                filtered_module = module
+                if module.children:
+                    filtered_module.children = self._filter_user_modules(module.children, user_module_keys)
+                result.append(filtered_module)
+        return result
+
+    def _load_all_groups(self):
+        groups = self._permission_repo.get_all_user_groups()
+        self._module_view.set_all_groups(groups)
+
+    def _on_group_selected(self, group_id: int):
+        self._current_group_id = group_id
+        groups = self._permission_repo.get_all_user_groups()
+        selected_group = next((g for g in groups if g.id == group_id), None)
+        if selected_group:
+            self._module_view.set_group_detail(selected_group.group_name)
+            users = self._permission_repo.get_group_users(group_id)
+            self._module_view.set_group_users(users, group_id)
+            all_modules = self._permission_repo.get_all_modules()
+            self._module_view.set_group_permissions(all_modules, selected_group.module_permissions)
+
+    def _on_add_user_button_clicked(self):
+        if not self._module_view.current_group_id:
+            QMessageBox.warning(self._module_view, "警告", "请先选择一个用户组")
+            return
+        users = self._permission_repo.get_all_users()
+        self._module_view.show_user_selection_dialog(users)
+
+    def _on_create_group(self, group_name: str, description: str):
+        success = self._permission_repo.create_user_group(group_name, description)
+        if success:
+            self.emit_status(f"用户组 '{group_name}' 创建成功")
+            self._load_all_groups()
+            if self._module_view:
+                QMessageBox.information(self._module_view, "成功", f"用户组 '{group_name}' 创建成功")
+        else:
+            self.emit_error(f"用户组 '{group_name}' 创建失败")
+            if self._module_view:
+                QMessageBox.critical(self._module_view, "错误", f"用户组 '{group_name}' 创建失败")
+
+    def _on_update_group_permissions(self, group_id: int, module_ids: list):
+        success = self._permission_repo.update_group_permissions(group_id, module_ids)
+        if success:
+            self.emit_status(f"用户组权限更新成功")
+            self._load_all_groups()
+            if self._current_group_id == group_id:
+                self._on_group_selected(group_id)
+            if self._module_view:
+                QMessageBox.information(self._module_view, "成功", "权限更新成功")
+        else:
+            self.emit_error("权限更新失败")
+            if self._module_view:
+                QMessageBox.critical(self._module_view, "错误", "权限更新失败")
+
+    def _on_add_user_to_group(self, user_id: str, group_id: int):
+        success = self._permission_repo.add_user_to_group(user_id, group_id)
+        if success:
+            self.emit_status(f"用户 '{user_id}' 已添加到用户组")
+            self._load_all_groups()
+            if self._current_group_id == group_id:
+                self._on_group_selected(group_id)
+            if self._module_view:
+                QMessageBox.information(self._module_view, "成功", f"用户 '{user_id}' 添加成功")
+        else:
+            self.emit_error(f"添加用户 '{user_id}' 失败")
+            if self._module_view:
+                QMessageBox.critical(self._module_view, "错误", "添加用户失败，可能该用户已在组中")
+
+    def _on_remove_user_from_group(self, user_id: str, group_id: int):
+        success = self._permission_repo.remove_user_from_group(user_id, group_id)
+        if success:
+            self.emit_status(f"用户 '{user_id}' 已从用户组移除")
+            self._load_all_groups()
+            if self._current_group_id == group_id:
+                self._on_group_selected(group_id)
+            if self._module_view:
+                QMessageBox.information(self._module_view, "成功", f"用户 '{user_id}' 移除成功")
+        else:
+            self.emit_error(f"移除用户 '{user_id}' 失败")
+            if self._module_view:
+                QMessageBox.critical(self._module_view, "错误", "移除用户失败")
+
+    def initialize(self) -> bool:
+        try:
+            self.emit_status("权限模块初始化成功")
+            return super().initialize()
+        except Exception as error:
+            self.emit_error(f"权限模块初始化失败: {error}")
+            return False

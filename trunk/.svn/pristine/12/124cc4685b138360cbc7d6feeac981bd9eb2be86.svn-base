@@ -1,0 +1,26 @@
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import pyqtSignal
+
+
+class BaseView(QWidget):
+    action_triggered = pyqtSignal(str, object)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._setup_ui()
+        self._setup_connections()
+
+    def _setup_ui(self):
+        pass
+
+    def _setup_connections(self):
+        pass
+
+    def update_data(self, data):
+        pass
+
+    def show_error(self, message: str):
+        pass
+
+    def show_status(self, message: str):
+        pass

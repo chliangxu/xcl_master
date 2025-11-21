@@ -1,0 +1,5 @@
+class ProjectMacros:
+    INSTALL_INDEX_SVN = 1
+    INSTALL_INDEX_P4 = 2
+    INSTALL_INDEX_VS = 3
+    INSTALL_INDEX_VS_CODE = 4

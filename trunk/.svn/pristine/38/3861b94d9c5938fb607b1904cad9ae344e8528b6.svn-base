@@ -1,0 +1,77 @@
+[Window]
+defaultwidth = 1400
+defaultheight = 900
+minwidth = 1200
+minheight = 800
+width = 1341
+height = 837
+maximized = False
+
+[Layout]
+sidebarwidth = 250
+sidebarpadding = 20
+sidebarspacing = 15
+headerheight = 80
+headerpaddingh = 30
+headerpaddingv = 15
+headerspacing = 20
+bannerheight = 320
+contentpadding = 30
+contentspacing = 20
+cardwidth = 300
+cardheight = 200
+cardpadding = 15
+cardspacing = 20
+cardborderradius = 12
+
+[Components]
+avatarsize = 80
+iconsize = 45
+userbuttonsize = 45
+buttonheight = 35
+buttonwidth = 80
+iconbuttonsize = 36
+launchbuttonwidth = 70
+launchbuttonheight = 30
+favoritebuttonsize = 30
+dialogwidth = 400
+dialogheight = 500
+
+[Fonts]
+family = Microsoft YaHei UI
+sizesmall = 10
+sizedefault = 12
+sizemedium = 14
+sizelarge = 16
+sizetitle = 20
+
+[Colors]
+background = #ffffff
+backgroundsecondary = #f5f5f5
+surface = #fafafa
+surfacehover = #e8e8e8
+primary = #0e639c
+primaryhover = #1177bb
+primaryactive = #00b8e6
+text = #333333
+textsecondary = #666666
+textdisabled = #999999
+border = #e0e0e0
+borderhover = #cccccc
+success = #4caf50
+warning = #ff9800
+error = #f44336
+transparent = transparent
+black = #000000
+darkgray = #cccccc
+mediumgray = #dddddd
+gray = #eeeeee
+
+[Styles]
+borderradiussmall = 8
+borderradiusmedium = 12
+borderradiuslarge = 22
+borderwidth = 2
+shadowblur = 10
+shadowoffset = 2
+

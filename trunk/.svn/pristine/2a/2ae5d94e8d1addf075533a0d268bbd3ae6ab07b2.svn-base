@@ -1,0 +1,263 @@
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame, QLineEdit, QComboBox
+from PyQt5.QtCore import Qt, pyqtSignal
+from src.common.base import BaseWidget
+from src.core import EventSystem, LogSystem
+from src.modules.project.controller.project_events import ProjectEvents
+from src.modules.project.controller.project_macros import ProjectMacros
+
+
+class ProjectView(QDialog):
+    install_dev_tools = pyqtSignal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.user = None
+        self.cfg = BaseWidget.cfg()
+        self.init_ui()
+        self.apply_styles()
+        self.events = EventSystem.instance()
+        self.setup_connections()
+
+    def setup_connections(self):
+        self.install_dev_tools.connect(
+            lambda tools_id: self.events.send_event(ProjectEvents.INSTALL_DEV_TOOLS, tools_id))
+        self.events.register_event(ProjectEvents.UPDATE_TOOLS_VERSION, self._on_check_tools_version)
+        self.events.register_event(ProjectEvents.DOWNLOAD_TOOLS_PROGRESS, self._on_download_tools_progress)
+
+    def _on_download_tools_progress(self, progress_dict):
+        count = progress_dict["count"]
+        block_size = progress_dict["block_size"]
+        total_size = progress_dict["total_size"]
+        percent = int(count * block_size * 100 / total_size)
+        # LogSystem.instance().info(f"\r下载进度: {percent}% [{count * block_size / (1024 * 1024):.2f}MB/{total_size / (1024 * 1024):.2f}MB]")
+        self.download_label.setText(f"\r下载进度: {percent}% [{count * block_size / (1024 * 1024):.2f}MB/{total_size / (1024 * 1024):.2f}MB]")
+
+    def _on_check_tools_version(self, tools_info_dict):
+
+        self.tools_info_dict = tools_info_dict
+
+        vs_found = tools_info_dict["vs_found"]
+        vs_version = tools_info_dict["vs_version"]
+        self.update_tools_btn_label(self.vs_label, self.vs_install_btn, "Visual Studio", vs_found, vs_version)
+
+        vs_code_found = tools_info_dict["vs_code_found"]
+        vs_code_version = tools_info_dict["vs_code_version"]
+        self.update_tools_btn_label(self.vs_code_label, self.vs_code_install_btn, "Visual Studio Code", vs_code_found, vs_code_version)
+
+
+        p4_found = tools_info_dict["p4_found"]
+        p4_version = tools_info_dict["p4_version"]
+        self.update_tools_btn_label(self.p4_label, self.p4_install_btn, "P4", p4_found, p4_version)
+
+
+        svn_found = tools_info_dict["svn_found"]
+        svn_version = tools_info_dict["svn_version"]
+        self.update_tools_btn_label(self.svn_label, self.svn_install_btn, "SVN", svn_found, svn_version)
+
+    @staticmethod
+    def update_tools_btn_label(tools_label, tools_btn, tools_name, found, version):
+        if found:
+            tools_label.setText(tools_name + " 已安装 (版本号：" + version + ")")
+            tools_btn.setText("重新安装")
+        else:
+            tools_label.setText(tools_name)
+            tools_btn.setText("安装")
+
+
+    def init_ui(self):
+        self.setWindowTitle("工具安装")
+        self.setFixedSize(
+            self.cfg.components.dialog_width * 1.5,
+            self.cfg.components.dialog_height
+        )
+        self.setModal(True)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setSpacing(20)
+
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(15)
+
+        name_layout = QHBoxLayout()
+        name_layout.setSpacing(5)
+        self.svn_label = QLabel("SVN：")
+        self.svn_label.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        self.svn_label.setStyleSheet(f"color: {BaseWidget.get_text_color()};")
+        name_layout.addWidget(self.svn_label)
+
+        self.svn_install_btn = QPushButton("安装")
+        self.svn_install_btn.setFixedSize(
+            self.cfg.components.button_width,
+            self.cfg.components.button_height
+        )
+        self.svn_install_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small))
+        self.svn_install_btn.clicked.connect(lambda: self.install_dev_tools.emit(ProjectMacros.INSTALL_INDEX_SVN))
+        name_layout.addWidget(self.svn_install_btn)
+
+        form_layout.addLayout(name_layout)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet(f"color: {BaseWidget.get_border_color()};")
+        form_layout.addWidget(separator)
+
+        role_layout = QHBoxLayout()
+        role_layout.setSpacing(5)
+        self.p4_label = QLabel("P4:")
+        self.p4_label.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        self.p4_label.setStyleSheet(f"color: {BaseWidget.get_text_color()};")
+        role_layout.addWidget(self.p4_label)
+
+
+        self.p4_install_btn = QPushButton("安装")
+        self.p4_install_btn.setFixedSize(
+            self.cfg.components.button_width,
+            self.cfg.components.button_height
+        )
+        self.p4_install_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small))
+        self.p4_install_btn.clicked.connect(lambda: self.install_dev_tools.emit(ProjectMacros.INSTALL_INDEX_P4))
+        role_layout.addWidget(self.p4_install_btn)
+
+        form_layout.addLayout(role_layout)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet(f"color: {BaseWidget.get_border_color()};")
+        form_layout.addWidget(separator)
+
+        role_layout = QHBoxLayout()
+        role_layout.setSpacing(5)
+        self.vs_label = QLabel("Visual Studio:")
+        self.vs_label.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        self.vs_label.setStyleSheet(f"color: {BaseWidget.get_text_color()};")
+        role_layout.addWidget(self.vs_label)
+
+        self.vs_install_btn = QPushButton("安装")
+        self.vs_install_btn.setFixedSize(
+            self.cfg.components.button_width,
+            self.cfg.components.button_height
+        )
+        self.vs_install_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small))
+        self.vs_install_btn.clicked.connect(lambda: self.install_dev_tools.emit(ProjectMacros.INSTALL_INDEX_VS))
+        role_layout.addWidget(self.vs_install_btn)
+
+        form_layout.addLayout(role_layout)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet(f"color: {BaseWidget.get_border_color()};")
+        form_layout.addWidget(separator)
+
+        role_layout = QHBoxLayout()
+        role_layout.setSpacing(5)
+        self.vs_code_label = QLabel("Visual Studio Code:")
+        self.vs_code_label.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        self.vs_code_label.setStyleSheet(f"color: {BaseWidget.get_text_color()};")
+        role_layout.addWidget(self.vs_code_label)
+
+        self.vs_code_install_btn = QPushButton("安装")
+        self.vs_code_install_btn.setFixedSize(
+            self.cfg.components.button_width,
+            self.cfg.components.button_height
+        )
+        self.vs_code_install_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small))
+        self.vs_code_install_btn.clicked.connect(lambda: self.install_dev_tools.emit(ProjectMacros.INSTALL_INDEX_VS_CODE))
+        role_layout.addWidget(self.vs_code_install_btn)
+
+        form_layout.addLayout(role_layout)
+        separator = QFrame()
+        separator.setFrameShape(QFrame.HLine)
+        separator.setStyleSheet(f"color: {BaseWidget.get_border_color()};")
+        form_layout.addWidget(separator)
+
+        role_layout = QHBoxLayout()
+        role_layout.setSpacing(5)
+        self.download_label = QLabel("下载进度:")
+        self.download_label.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        self.download_label.setStyleSheet(f"color: {BaseWidget.get_text_color()};")
+        role_layout.addWidget(self.download_label)
+        form_layout.addLayout(role_layout)
+
+        layout.addLayout(form_layout)
+
+        layout.addStretch()
+
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+
+        cancel_btn = QPushButton("安装全部")
+        cancel_btn.setFixedSize(
+            self.cfg.components.button_width * 1.5,
+            self.cfg.components.button_height
+        )
+        cancel_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small))
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+
+        button_layout.addStretch()
+
+        save_btn = QPushButton("退出")
+        save_btn.setFixedSize(
+            self.cfg.components.button_width,
+            self.cfg.components.button_height
+        )
+        save_btn.setFont(BaseWidget.get_default_font(self.cfg.fonts.size_small, bold=True))
+        save_btn.clicked.connect(self.reject)
+        button_layout.addWidget(save_btn)
+
+        layout.addLayout(button_layout)
+
+    def apply_styles(self):
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {BaseWidget.get_background_color()};
+                color: {BaseWidget.get_text_color()};
+            }}
+            QLineEdit {{
+                background-color: {BaseWidget.get_secondary_background()};
+                border: 1px solid {BaseWidget.get_border_color()};
+                border-radius: 6px;
+                padding: 8px;
+                color: {BaseWidget.get_text_color()};
+            }}
+            QLineEdit:focus {{
+                border-color: {BaseWidget.get_primary_color()};
+            }}
+            QComboBox {{
+                background-color: {BaseWidget.get_secondary_background()};
+                border: 1px solid {BaseWidget.get_border_color()};
+                border-radius: 6px;
+                padding: 8px;
+                color: {BaseWidget.get_text_color()};
+            }}
+            QComboBox:focus {{
+                border-color: {BaseWidget.get_primary_color()};
+            }}
+            QComboBox::drop-down {{
+                border: none;
+            }}
+            QComboBox::down-arrow {{
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid {BaseWidget.get_text_color()};
+            }}
+            QPushButton {{
+                background-color: {BaseWidget.get_secondary_background()};
+                border: 1px solid {BaseWidget.get_border_color()};
+                border-radius: 6px;
+                color: {BaseWidget.get_text_color()};
+                padding: 8px 16px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.cfg.colors.dark_gray};
+                border-color: {BaseWidget.get_primary_color()};
+            }}
+            QPushButton:pressed {{
+                background-color: {self.cfg.colors.medium_gray};
+            }}
+        """)
+
+
+    def _install_svn(self):
+        tools_id = 1
+        LogSystem.instance().info("点击安装svn按钮")
+        self.install_dev_tools.emit(tools_id)

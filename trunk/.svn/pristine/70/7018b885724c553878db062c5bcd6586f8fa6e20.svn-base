@@ -1,0 +1,24 @@
+from src.common.base import BaseController
+from src.modules.notification.view.notification_module_view import NotificationModuleView
+from typing import Dict, Optional
+
+
+class NotificationController(BaseController):
+    MODULE_KEY = "Notification"
+    
+    def __init__(self, dependencies: Optional[Dict[str, object]] = None):
+        super().__init__(dependencies)
+        self._module_view = None
+
+    def get_module_view(self):
+        if not self._module_view:
+            self._module_view = NotificationModuleView()
+        return self._module_view
+
+    def initialize(self) -> bool:
+        try:
+            self.emit_status("通知模块初始化成功")
+            return super().initialize()
+        except Exception as error:
+            self.emit_error(f"通知模块初始化失败: {error}")
+            return False

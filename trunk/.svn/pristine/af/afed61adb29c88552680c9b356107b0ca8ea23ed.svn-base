@@ -1,0 +1,80 @@
+# ============================================
+# 工具配置文件
+# ============================================
+
+# --------------------------------------------
+# 工具分类
+# --------------------------------------------
+[Categories]
+production_pipeline = 制作管线
+personal_workspace = 个人工作区
+tool_market = 工具市场
+
+# --------------------------------------------
+# 工具列表
+# 格式: [Tool:工具ID]
+# --------------------------------------------
+
+[Tool:ue_editor]
+Name = UE编辑器
+Description = Unreal Engine 5 编辑器
+Category = production_pipeline
+Type = programming
+ExecutablePath = 0.exe
+Icon = ue
+Enabled = true
+
+[Tool:version_control]
+Name = 版本控制
+Description = CJGameSync版本控制工具，管理代码版本和协作开发
+Category = production_pipeline
+Type = common
+ExecutablePath = CJGameSync.exe
+Icon = git
+Enabled = true
+
+[Tool:asset_browser]
+Name = 资源浏览器
+Description = 游戏资源管理工具
+Category = production_pipeline
+Type = art
+ExecutablePath = AssetBrowser.exe
+Icon = asset
+Enabled = true
+
+[Tool:code_editor]
+Name = VSCode编辑器
+Description = Visual Studio Code 代码编辑器
+Category = personal_workspace
+Type = programming
+ExecutablePath = vscode.exe
+Icon = vscode
+Enabled = true
+
+[Tool:design_doc]
+Name = 设计文档
+Description = 游戏设计文档编辑和管理工具
+Category = personal_workspace
+Type = planning
+ExecutablePath = DesignDoc.exe
+Icon = doc
+Enabled = true
+
+[Tool:art_tools]
+Name = 美术工具
+Description = 美术制作工具集
+Category = personal_workspace
+Type = art
+ExecutablePath = ArtTools.exe
+Icon = art
+Enabled = true
+
+
+[Tool:asset_store]
+Name = 资源商店
+Description = 资源下载平台
+Category = tool_market
+Type = art
+ExecutablePath = 0.exe
+Icon = store
+Enabled = true

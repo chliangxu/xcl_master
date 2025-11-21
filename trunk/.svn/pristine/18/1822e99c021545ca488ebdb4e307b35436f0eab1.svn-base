@@ -1,0 +1,14 @@
+"""
+协同表格视图包
+包含QTDesigner兼容的Widget和传统的View
+"""
+
+from .collaborative_table_view import CollaborativeTableView
+from .collaborative_table_widget import CollaborativeTableWidget
+from .ui_collaborative_table import Ui_CollaborativeTableWidget
+
+__all__ = [
+    'CollaborativeTableView',
+    'CollaborativeTableWidget', 
+    'Ui_CollaborativeTableWidget'
+]

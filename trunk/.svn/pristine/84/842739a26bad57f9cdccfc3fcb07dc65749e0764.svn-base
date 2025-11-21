@@ -1,0 +1,27 @@
+from typing import Dict, Optional
+from src.common.base import BaseController
+from src.modules.version_info.model.version_info_models import VersionInfoRepository
+from src.modules.version_info.view.version_info_module_view import VersionInfoModuleView
+
+
+class VersionInfoController(BaseController):
+    MODULE_KEY = "VersionInfo"
+
+    def __init__(self, dependencies: Optional[Dict[str, object]] = None):
+        super().__init__(dependencies)
+        self._version_repo = VersionInfoRepository()
+        self.data_service.register_repository('version_info', self._version_repo)
+        self._module_view = None
+
+    def get_module_view(self):
+        if not self._module_view:
+            self._module_view = VersionInfoModuleView()
+        return self._module_view
+
+    def initialize(self) -> bool:
+        try:
+            self.emit_status("版本信息模块初始化成功")
+            return super().initialize()
+        except Exception as error:
+            self.emit_error(f"版本信息模块初始化失败: {error}")
+            return False

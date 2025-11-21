@@ -1,0 +1,70 @@
+from tapdsdk.sdk import TapdAPIClient
+from dataclasses import dataclass
+from typing import List
+
+# TAPD 配置
+TAPD_USERNAME = "chenjian"
+TAPD_PASSWORD = "9FE1B7EB-1671-9BC6-D91C-7B45C444D24E"
+
+TAPD_WORKSPACE_ID = 70190238
+TAPD_WEB_URL = "https://tapd.woa.com/tapd_fe/20386762/bug/list?confId=1020386762105611698"
+
+
+@dataclass
+class BugData:
+    bug_id: int
+    bug_name: str
+
+
+class TaskTapdModel:
+    def __init__(self, username: str = TAPD_USERNAME, password: str = TAPD_PASSWORD,
+                 workspace_id: int = TAPD_WORKSPACE_ID):
+        self.workspace_id = workspace_id
+        self.sdk = None
+
+        if username and password:
+            self.sdk = TapdAPIClient(
+                client_id=username,
+                client_secret=password
+            )
+
+    def get_bug_data(self) -> List[BugData]:
+        if not self.sdk:
+            return []
+
+        resp = self.sdk.get_bugs({'workspace_id': self.workspace_id})
+        data = resp.get("data", [])
+        bug_list = []
+
+        for bugs in data:
+            bug = bugs.get("Bug")
+            if bug:
+                bug_data = BugData(
+                    bug_id=int(bug.get("id", 0)),
+                    bug_name=bug.get("title", "")
+                )
+                bug_list.append(bug_data)
+
+        return bug_list
+
+    def get_bug_data_count(self, owner: str) -> int:
+        if not self.sdk:
+            return 0
+
+        resp = self.sdk.get_bugs_count({
+            'workspace_id': self.workspace_id,
+            'current_owner': owner
+        })
+        data = resp.get("data", {})
+        return data.get("count", 0)
+
+    def get_need_data_count(self, owner: str) -> int:
+        if not self.sdk:
+            return 0
+
+        resp = self.sdk.get_stories_count({
+            'workspace_id': self.workspace_id,
+            'owner': owner
+        })
+        data = resp.get("data", {})
+        return data.get("count", 0)

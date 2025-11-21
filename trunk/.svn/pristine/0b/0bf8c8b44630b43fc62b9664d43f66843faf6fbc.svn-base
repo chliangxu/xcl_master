@@ -1,0 +1,50 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel
+from PyQt5 import uic
+from PyQt5.QtGui import QFont
+from PyQt5.QtCore import pyqtSignal
+import os
+from src.common.utils import ResourceUtils
+
+
+class TaskBugView(QMainWindow):
+    tapd_button_clicked = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        uic.loadUi(ResourceUtils.get_ui_path(__file__, "BUG.ui"), self)
+        self._init_ui()
+
+    def _init_ui(self):
+        self.username_label_bug = self.findChild(QLabel, "bugTittleLabel")
+        self.username_label_need = self.findChild(QLabel, "needTittleLabel")
+        self.needcount_label = self.findChild(QLabel, "needCountLabel")
+        self.bugcount_label = self.findChild(QLabel, "bugCountLabel")
+        self.tapd_pushbutton = self.findChild(QPushButton, "pushButton")
+
+        self.username_label_bug.setStyleSheet("color: #0000FF;")
+        self.username_label_bug.setFont(QFont("Arial", 18))
+        self.username_label_need.setStyleSheet("color: #0000FF;")
+        self.username_label_need.setFont(QFont("Arial", 18))
+        self.tapd_pushbutton.setFont(QFont("Arial", 18))
+
+        self.tapd_pushbutton.clicked.connect(self.tapd_button_clicked.emit)
+
+    def set_need_count(self, count: int):
+        self.needcount_label.setText(str(count))
+
+    def set_bug_count(self, count: int):
+        self.bugcount_label.setText(str(count))
+
+    def show_error(self, message: str):
+        if self.needcount_label:
+            self.needcount_label.setText(message)
+        if self.bugcount_label:
+            self.bugcount_label.setText(message)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = TaskBugView()
+    window.show()
+    sys.exit(app.exec_())

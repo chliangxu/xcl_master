@@ -1,0 +1,42 @@
+from src.common.base import BaseController
+from src.core import LogSystem
+from src.modules.project.controller.project_download_logic import ProjectDownloadLogic
+from src.modules.project.controller.project_events import ProjectEvents
+from src.modules.project.controller.project_tools_logic import ProjectToolsLogic
+from src.modules.project.view.project_module_view import ProjectModuleView
+from typing import Dict, Optional
+
+
+class ProjectController(BaseController):
+    MODULE_KEY = "Project"
+    
+    def __init__(self, dependencies: Optional[Dict[str, object]] = None):
+        super().__init__(dependencies)
+        self._module_view = None
+        self._register_events()
+        self.tools_logic = ProjectToolsLogic()
+        self.download_logic = ProjectDownloadLogic()
+
+    def get_module_view(self):
+        if not self._module_view:
+            self._module_view = ProjectModuleView()
+        return self._module_view
+
+    def initialize(self) -> bool:
+        try:
+            self.emit_status("项目模块初始化成功")
+            return super().initialize()
+        except Exception as error:
+            self.emit_error(f"项目模块初始化失败: {error}")
+            return False
+    def _register_events(self):
+        self.register_event(ProjectEvents.INSTALL_DEV_TOOLS, self._on_install_dev_tools)
+        self.register_event(ProjectEvents.CHECK_TOOLS_VERSION, self._on_check_tools_version)
+
+    def _on_install_dev_tools(self, tool_id: int):
+        LogSystem.instance().info("开始安装 tools_id: " + str(tool_id))
+        self.download_logic.download_and_install_by_tools_id(tool_id)
+
+    def _on_check_tools_version(self):
+        tools_info_dict =  self.tools_logic.check_tools_version()
+        self.events.send_event(ProjectEvents.UPDATE_TOOLS_VERSION, tools_info_dict)

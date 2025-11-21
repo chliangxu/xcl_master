@@ -1,0 +1,22 @@
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel,QHeaderView
+from PyQt5 import uic
+
+
+class VersionInfoModuleView(QMainWindow):
+    def __init__(self):
+        super().__init__()  # 初始化父类QWidget
+        # 动态加载UI文件（.ui文件路径需与代码同级或指定绝对路径）
+        uic.loadUi("./src/modules/version_info/view/recommend_version.ui", self)
+        # uic.loadUi("recommend_version.ui", self)
+
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)  # 创建QApplication实例
+    window = VersionInfoModuleView()  # 实例化主窗口
+    window.show()  # 显示窗口
+    sys.exit(app.exec_())  # 进入事件循环

@@ -1,0 +1,80 @@
+from src.common.base import BaseController
+from src.modules.login.model.user_models import UserModel, User, UserRole
+from src.core.event import Events
+from typing import Dict, Optional
+
+
+class LoginController(BaseController):
+    MODULE_KEY = "Login"
+    def __init__(self, dependencies: Optional[Dict[str, object]] = None):
+        super().__init__(dependencies)
+        self.user_model = UserModel.get_instance()
+        self._register_events()
+
+    def _register_events(self):
+        self.register_event(Events.USER_PROFILE_UPDATED, self._on_profile_updated)
+
+    def initialize(self) -> bool:
+        try:
+            current_user = self.user_model.get_current_user()
+            if not current_user:
+                saved_name = self.config.user.user_name
+                saved_role_str = self.config.user.user_role
+
+                role_map = {
+                    "策划": UserRole.PLANNER,
+                    "客户端程序": UserRole.CLIENT_PROGRAMMER,
+                    "服务器程序": UserRole.SERVER_PROGRAMMER,
+                    "美术": UserRole.ARTIST,
+                    "运营": UserRole.OPERATIONS
+                }
+                role = role_map.get(saved_role_str, UserRole.CLIENT_PROGRAMMER)
+
+                default_user = User(
+                    id=saved_name,
+                    name=saved_name,
+                    role=role,
+                    avatar_path="",
+                    preferences={}
+                )
+                self.user_model.add_user(default_user)
+                self.user_model.set_current_user(default_user)
+
+            self.emit_status("登录模块初始化成功")
+            return super().initialize()
+        except Exception as error:
+            self.emit_error(f"登录模块初始化失败: {error}")
+            return False
+
+    def _on_profile_updated(self, profile_data: dict):
+        role_map = {
+            "策划": UserRole.PLANNER,
+            "客户端程序": UserRole.CLIENT_PROGRAMMER,
+            "服务器程序": UserRole.SERVER_PROGRAMMER,
+            "美术": UserRole.ARTIST,
+            "运营": UserRole.OPERATIONS
+        }
+
+        current_user = self.user_model.get_current_user()
+        if current_user:
+            new_name = profile_data.get('name')
+            role_text = profile_data.get('role')
+            changed = False
+
+            if new_name and new_name != current_user.name:
+                current_user.id = new_name
+                current_user.name = new_name
+                changed = True
+
+            if role_text and role_text in role_map and current_user.role != role_map[role_text]:
+                current_user.role = role_map[role_text]
+                changed = True
+
+            if changed:
+                self.user_model.update_user(current_user)
+                self.config.user.save_user_info(current_user.name, current_user.role.value)
+                self.send_event(Events.USER_INFO_CHANGED, current_user)
+                self.log.info(f"用户信息已更新: {current_user.name} - {current_user.role.value}")
+
+    def get_current_user(self) -> Optional[User]:
+        return self.user_model.get_current_user()

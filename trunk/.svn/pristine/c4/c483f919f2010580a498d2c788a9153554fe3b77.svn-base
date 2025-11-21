@@ -1,0 +1,262 @@
+import os
+import re
+import shutil
+import subprocess
+
+from src.core import LogSystem
+
+
+class ProjectToolsLogic:
+
+    def check_tools_version(self):
+        tools_info_dict = {}
+        vs_found, vs_version = self.get_vs_install_info()
+        tools_info_dict["vs_found"] = vs_found
+        tools_info_dict["vs_version"] = vs_version
+
+        vs_code_found, vs_code_version = self.get_vs_code_install_info()
+        tools_info_dict["vs_code_found"] = vs_code_found
+        tools_info_dict["vs_code_version"] = vs_code_version
+
+        p4_found, p4_version = self.get_p4_install_info()
+        tools_info_dict["p4_found"] = p4_found
+        tools_info_dict["p4_version"] = p4_version
+
+        svn_found, svn_version = self.get_svn_install_info()
+        tools_info_dict["svn_found"] = svn_found
+        tools_info_dict["svn_version"] = svn_version
+
+        return tools_info_dict
+
+    def get_svn_install_info(self):
+        found = self.check_tools_install_env("where p4v")
+        if found:
+            svn_version = self.get_svn_version()
+            LogSystem.instance().info("[project] p4 installed, svn_version = " + svn_version)
+            return True, svn_version
+        return False, ""
+
+    def get_p4_install_info(self):
+        found = self.check_tools_install_env("where p4v")
+        if found:
+            p4_version = self.get_p4_version()
+            LogSystem.instance().info("[project] p4 installed, p4_version = " + p4_version)
+            return True, p4_version
+        return False, ""
+
+    @staticmethod
+    def get_svn_version():
+        try:
+            # 执行 svn --version 命令
+            result = subprocess.run(['svn', '--version'], capture_output=True, text=True, check=True, timeout=10)
+            # 通常版本信息在第一行，例如 "svn, version 1.14.1 (r1876290)"
+            first_line = result.stdout.strip().split('\n')[0]
+            # 从第一行中提取版本号
+            import re
+            version_match = re.search(r'version\s+([\d.]+)', first_line)
+            if version_match:
+                return version_match.group(1)
+            else:
+                return None
+        except subprocess.CalledProcessError as e:
+            print(f"执行 SVN 命令失败: {e}")
+            return None
+        except FileNotFoundError:
+            print("未找到 svn 命令，请确保 SVN 已安装并添加到 PATH 环境变量中。[1](@ref)")
+            return None
+        except subprocess.TimeoutExpired:
+            print("命令执行超时。")
+            return None
+
+    @staticmethod
+    def get_p4_version():
+        try:
+            # 检查系统是否安装了 p4 命令
+            p4_path = shutil.which("p4")
+            if not p4_path:
+                LogSystem.instance().info("未找到 p4 命令，请确保 Perforce 已安装并添加到 PATH 环境变量")
+                return ""
+
+            # 执行 p4 -V 命令
+            result = subprocess.run(["p4", "-V"],
+                                    capture_output=True,
+                                    text=True,
+                                    check=True,
+                                    timeout=10)
+
+            # 解析输出以提取版本号
+            # 输出通常格式如: "Perforce - The Fast Software Configuration Management System."
+            #                 "Rev. P4/X86_64/2021.1/1234567 (2021/01/01)."
+            if result.stdout:
+                lines = result.stdout.strip().split('\n')
+                for line in lines:
+                    if "Rev." in line:
+                        # 使用正则表达式提取版本号
+                        match = re.search(r'Rev\.\s+P4/\w+/([^/]+)/(\d+)', line)
+                        if match:
+                            version = match.group(1)  # 如 "2021.1"
+                            return version
+
+                # 如果上面的正则没匹配到，尝试更简单的匹配
+                for line in lines:
+                    if "Rev." in line:
+                        # 提取括号中的日期版本信息作为备选
+                        match = re.search(r'\((\d{4}/\d{1,2}/\d{1,2})\)', line)
+                        if match:
+                            return f"Version (Date: {match.group(1)})"
+
+                # 如果都没匹配到，返回第一行有用信息
+                for line in lines:
+                    if line and not line.startswith("Perforce"):
+                        return line.strip()
+
+            return ""
+
+        except subprocess.CalledProcessError as e:
+            LogSystem.instance().info(f"执行 p4 -V 命令失败: {e}")
+            return ""
+        except subprocess.TimeoutExpired:
+            LogSystem.instance().info("命令执行超时")
+            return ""
+        except FileNotFoundError:
+            LogSystem.instance().info("未找到 p4 命令")
+            return ""
+
+
+    def get_vs_code_install_info(self):
+        found = self.check_tools_install_env("where code")
+        if found:
+            vs_code_version = self.get_vs_code_version()
+            LogSystem.instance().info("[project] vs code installed, vs_code_version = " + vs_code_version)
+            return True, vs_code_version
+        return False, ""
+
+    @staticmethod
+    def get_vs_code_version():
+        typical_vscode_paths = [
+            r"C:\Program Files\Microsoft VS Code\bin",
+            r"C:\Users\{}\AppData\Local\Programs\Microsoft VS Code\bin".format(os.environ.get('USERNAME', '')),
+        ]
+        for path in typical_vscode_paths:
+            if os.path.exists(path):
+                vscode_exe_path = path + "\code.cmd"
+                try:
+                    result = subprocess.run([vscode_exe_path, '--version'], capture_output=True, text=True, check=True)
+                    output_lines = result.stdout.strip().split('\n')
+                    if output_lines:
+                        version = output_lines[0]
+                        return version
+                except subprocess.CalledProcessError:
+                    LogSystem.instance().info("[project] 执行 code --version 命令失败")
+                    return ""
+                except subprocess.TimeoutExpired:
+                    LogSystem.instance().info("[project] 命令执行超时")
+                    return ""
+                except FileNotFoundError:
+                    LogSystem.instance().info("[project] 未找到 code 命令，请确保 VSCode 已安装并正确配置")
+                    return ""
+        return ""
+
+    def get_vs_install_info(self):
+        found = self.check_tools_install_env("where devenv.exe")
+        if found:
+            LogSystem.instance().info("[project] visual studio installed, found in path")
+            return True, ""
+        sub_dir = ["C", "D", "E", "F"]
+        sub_paths = [
+            # Visual Studio 2022
+            ":\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe",
+            # Visual Studio 2019
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Common7\\IDE\\devenv.exe",
+            # Visual Studio 2017
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise\\Common7\\IDE\\devenv.exe",
+            ":\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\IDE\\devenv.exe",
+        ]
+        paths = []
+        for path in sub_paths:
+            for dir_name in sub_dir:
+                full_path = dir_name + path
+                paths.append(full_path)
+
+        found, version_info = self.check_tools_in_dir(paths)
+
+        return found, version_info
+
+    def check_tools_in_dir(self, common_paths):
+        found = False
+        path_found = ""
+        version_info = ""
+        for path in common_paths:
+            if os.path.exists(path):
+                found = True
+                path_found = path
+                break
+        if found:
+            try:
+                # 使用Powershell获取版本信息
+                ps_command = f'(Get-Item "{path_found}").VersionInfo'
+                version_info = subprocess.run(
+                    ["powershell", "-Command", ps_command],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    timeout=10
+                )
+
+                if version_info.returncode == 0:
+                    version_info = self.extract_version_info(version_info.stdout)
+            except (subprocess.SubprocessError, subprocess.TimeoutExpired):
+                # 如果获取详细版本信息失败，使用文件修改时间作为备选
+                try:
+                    mtime = os.path.getmtime(path_found)
+                    from datetime import datetime
+                    version_info = "modified_time:" + str(datetime.fromtimestamp(mtime).isoformat())
+                except OSError:
+                    pass
+
+        LogSystem.instance().info("[project] found = " + str(found) + ", path_found = " + path_found + ", version_info = " + version_info)
+        return found, version_info
+
+    @staticmethod
+    def extract_version_info(version_output):
+        # LogSystem.instance().info("[project] version_output " + str(version_output))
+        # 简单的文本解析来提取关键信息
+        lines = version_output.split('\n')
+        for line in lines:
+            words = line.split()
+            if len(words) > 1 and words[0][0].isdigit() and words[1][0].isdigit():
+                return words[0]
+        return ""
+
+    @staticmethod
+    def check_tools_install_env(command):
+        # command = ['where', 'devenv.exe']
+        try:
+            # 使用 subprocess.Popen 执行命令
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,  # 确保输出为字符串而非字节
+                shell=False  # 避免 shell 注入风险
+            )
+            # 获取命令输出和错误
+            stdout, stderr = process.communicate()
+
+            # 检查命令执行结果：返回码为 0 且输出非空表示找到文件
+            if process.returncode == 0 and stdout.strip():
+                return True
+            else:
+                return False
+
+        except FileNotFoundError:
+            # 如果系统命令不存在（如 where 或 which 不可用）
+            return False
+        except Exception as e:
+            print(f"检查过程中发生错误：{e}")
+            return False

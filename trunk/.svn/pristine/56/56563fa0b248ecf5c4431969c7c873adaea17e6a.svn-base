@@ -1,0 +1,92 @@
+from src.modules.main.view.main_window import MainWindow
+from src.core import ConfigSystem, DataService
+from src.common.base import BaseController
+from src.core.event import Events
+from src.modules.login.controller.login_controller import LoginController
+from src.modules.project.controller.project_controller import ProjectController
+from src.modules.permission_manager.controller.permission_manager_controller import PermissionManagerController
+from src.modules.tools.controller.tools_controller import ToolsController
+from src.modules.notification.controller.notification_controller import NotificationController
+from src.modules.task.controller.task_controller import TaskController
+from src.modules.version_info.controller.version_info_controller import VersionInfoController
+from src.modules.login.model.user_models import User, UserModel
+from src.modules.tools.model.tool_models import ToolRepository
+
+
+class MainController(BaseController):
+    def __init__(self):
+        core_services = {
+            "data_service": DataService.get_instance(),
+            "config": ConfigSystem.instance(),
+        }
+        super().__init__(core_services)
+        self.window = MainWindow()
+        self._modules = {}
+        self._init_repositories()
+        self._init_modules()
+        self._register_events()
+        self._initialize()
+
+    def _init_repositories(self):
+        self.data_service.register_repository('user', UserModel())
+        self.data_service.register_repository('tool', ToolRepository())
+
+    def _init_modules(self):
+        modules = [LoginController, PermissionManagerController, ProjectController,
+                   ToolsController, NotificationController, TaskController, VersionInfoController]
+        for module_class in modules:
+            module = module_class(self._dependencies)
+            if module.MODULE_KEY:
+                self._modules[module.MODULE_KEY] = module
+            else:
+                self._modules[module.name] = module
+
+    def _register_events(self):
+        self.register_event(Events.CATEGORY_CHANGED, self._on_category_changed)
+        self.register_event(Events.TOOLS_UPDATED, self._on_tools_updated)
+        self.register_event(Events.USER_INFO_CHANGED, self._on_user_info_changed)
+        self.register_event(Events.USER_INFO_CHANGED, self._on_user_permission_changed)
+
+        self.window.category_changed.connect(lambda cat: self.send_event(Events.CATEGORY_CHANGED, cat))
+        self.window.user_profile.profile_updated.connect(
+            lambda data: self.send_event(Events.USER_PROFILE_UPDATED, data))
+
+    def _initialize(self):
+        for module in self._modules.values():
+            if not module.initialize():
+                module_name = module.MODULE_KEY if module.MODULE_KEY else module.name
+                self.log.error(f"{module_name} 初始化失败")
+                return False
+
+        login_controller = self._modules.get("Login")
+        if login_controller:
+            current_user = login_controller.get_current_user()
+            if current_user:
+                self.window.set_user_info(current_user)
+                permission_repo = self.data_service.permission_repository
+                if permission_repo:
+                    permission_repo.load_user_permissions(current_user.id)
+                self.window.sidebar.update_module_visibility()
+
+    def _on_category_changed(self, module_key: str):
+        module = self._modules.get(module_key)
+        if module:
+            module_view = module.get_module_view()
+            if module_view:
+                self.window.update_content(module_view)
+                self.log.info(f"切换到模块: {module_key}")
+
+    def _on_user_info_changed(self, user: User):
+        self.window.set_user_info(user)
+        self.log.info(f"UI已更新用户信息: {user.name} - {user.role.value}")
+
+    def _on_tools_updated(self, data=None):
+        self._on_category_changed("Tools")
+
+    def _on_user_permission_changed(self, user):
+        self.window.sidebar.update_module_visibility()
+        self.log.info(f"已更新侧边栏模块显示: {user.name}")
+
+    def show(self):
+        if self.window:
+            self.window.show()

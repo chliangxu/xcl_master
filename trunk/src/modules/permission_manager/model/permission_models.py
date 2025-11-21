@@ -1,0 +1,288 @@
+from dataclasses import dataclass, field
+from typing import List, Set, Optional
+from src.core.services import MysqlService
+
+
+@dataclass
+class Module:
+    id: int
+    module_key: str
+    module_name: str
+    parent_id: Optional[int] = None
+    children: List['Module'] = field(default_factory=list)
+
+
+@dataclass
+class UserGroup:
+    id: int
+    group_name: str
+    description: str = ""
+    user_count: int = 0
+    module_permissions: Set[str] = field(default_factory=set)
+
+
+@dataclass
+class GroupUser:
+    user_id: str
+    group_id: int
+    group_name: str = ""
+
+
+@dataclass
+class Permission:
+    user_id: str
+    modules: Set[str]
+
+
+@dataclass
+class ThirdPartyPermission:
+    id: int
+    typename: str
+    type: str
+    jumpurl: str
+
+
+class PermissionRepository:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+        self._permissions: dict[str, Permission] = {}
+        self._users_cache = None
+        self._users_cache_time = 0
+
+    @classmethod
+    def get_instance(cls) -> "PermissionRepository":
+        return cls()
+
+    def load_user_permissions(self, user_id: str) -> Permission:
+        sql = f"""
+        SELECT m.module_key
+        FROM hpjy_cggamestuidio.hpjy_module m
+        INNER JOIN hpjy_cggamestuidio.hpjy_module_permission mp ON m.id = mp.module_id
+        INNER JOIN hpjy_cggamestuidio.hpjy_user_group_rel ugr ON mp.group_id = ugr.group_id
+        WHERE ugr.user_id = '{user_id}'
+        """
+        result = MysqlService.get(sql)
+        modules = set()
+        if result.get('success'):
+            for row in result.get('data', []):
+                modules.add(row['module_key'])
+        permission = Permission(user_id=user_id, modules=modules)
+        self._permissions[user_id] = permission
+        return permission
+
+    def get_permission(self, user_id: str) -> Optional[Permission]:
+        return self._permissions.get(user_id)
+
+    def has_module_permission(self, user_id: str, module_key: str) -> bool:
+        permission = self._permissions.get(user_id)
+        if not permission:
+            return False
+        return module_key in permission.modules
+
+    def clear_permission(self, user_id: str):
+        if user_id in self._permissions:
+            del self._permissions[user_id]
+
+    def clear_all(self):
+        self._permissions.clear()
+
+    def get_all_modules(self) -> List[Module]:
+        sql = """
+        SELECT id, module_key, module_name, parent_id
+        FROM hpjy_cggamestuidio.hpjy_module
+        ORDER BY parent_id, id
+        """
+        result = MysqlService.get(sql)
+        modules = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                module = Module(
+                    id=row['id'],
+                    module_key=row['module_key'],
+                    module_name=row['module_name'],
+                    parent_id=row.get('parent_id')
+                )
+                modules.append(module)
+        return self._build_module_tree(modules)
+
+    def _build_module_tree(self, modules: List[Module]) -> List[Module]:
+        module_dict = {m.id: m for m in modules}
+        root_modules = []
+
+        for module in modules:
+            if module.parent_id is None:
+                root_modules.append(module)
+            else:
+                parent = module_dict.get(module.parent_id)
+                if parent:
+                    parent.children.append(module)
+
+        return root_modules
+
+    def get_all_user_groups(self) -> List[UserGroup]:
+        sql = """
+        SELECT 
+            g.id,
+            g.group_name,
+            g.description,
+            COUNT(DISTINCT ugr.user_id) as user_count
+        FROM hpjy_cggamestuidio.hpjy_user_group g
+        LEFT JOIN hpjy_cggamestuidio.hpjy_user_group_rel ugr ON g.id = ugr.group_id
+        GROUP BY g.id, g.group_name, g.description
+        ORDER BY g.id
+        """
+        result = MysqlService.get(sql)
+        groups = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                group = UserGroup(
+                    id=row['id'],
+                    group_name=row['group_name'],
+                    description=row.get('description', ''),
+                    user_count=row.get('user_count', 0)
+                )
+                group.module_permissions = self._get_group_permissions(group.id)
+                groups.append(group)
+        return groups
+
+    def _get_group_permissions(self, group_id: int) -> Set[str]:
+        sql = f"""
+        SELECT m.module_key
+        FROM hpjy_cggamestuidio.hpjy_module m
+        INNER JOIN hpjy_cggamestuidio.hpjy_module_permission mp ON m.id = mp.module_id
+        WHERE mp.group_id = {group_id}
+        """
+        result = MysqlService.get(sql)
+        permissions = set()
+        if result.get('success'):
+            for row in result.get('data', []):
+                permissions.add(row['module_key'])
+        return permissions
+
+    def get_group_users(self, group_id: int) -> List[str]:
+        sql = f"""
+        SELECT user_id
+        FROM hpjy_cggamestuidio.hpjy_user_group_rel
+        WHERE group_id = {group_id}
+        ORDER BY user_id
+        """
+        result = MysqlService.get(sql)
+        users = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                users.append(row['user_id'])
+        return users
+
+    def get_user_groups(self, user_id: str) -> List[GroupUser]:
+        sql = f"""
+        SELECT 
+            ugr.user_id,
+            ugr.group_id,
+            g.group_name
+        FROM hpjy_cggamestuidio.hpjy_user_group_rel ugr
+        INNER JOIN hpjy_cggamestuidio.hpjy_user_group g ON ugr.group_id = g.id
+        WHERE ugr.user_id = '{user_id}'
+        ORDER BY g.group_name
+        """
+        result = MysqlService.get(sql)
+        groups = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                groups.append(GroupUser(
+                    user_id=row['user_id'],
+                    group_id=row['group_id'],
+                    group_name=row['group_name']
+                ))
+        return groups
+
+    def create_user_group(self, group_name: str, description: str = "") -> bool:
+        sql = f"""
+        INSERT INTO hpjy_cggamestuidio.hpjy_user_group (group_name, description)
+        VALUES ('{group_name}', '{description}')
+        """
+        result = MysqlService.post(sql)
+        return result.get('success', False)
+
+    def update_group_permissions(self, group_id: int, module_ids: List[int]) -> bool:
+        delete_sql = f"DELETE FROM hpjy_cggamestuidio.hpjy_module_permission WHERE group_id = {group_id}"
+        MysqlService.post(delete_sql)
+
+        if module_ids:
+            values = ', '.join([f"({group_id}, {mid})" for mid in module_ids])
+            insert_sql = f"""
+            INSERT INTO hpjy_cggamestuidio.hpjy_module_permission (group_id, module_id)
+            VALUES {values}
+            """
+            result = MysqlService.post(insert_sql)
+            return result.get('success', False)
+        return True
+
+    def add_user_to_group(self, user_id: str, group_id: int) -> bool:
+        sql = f"""
+        INSERT INTO hpjy_cggamestuidio.hpjy_user_group_rel (user_id, group_id)
+        VALUES ('{user_id}', {group_id})
+        """
+        result = MysqlService.post(sql)
+        return result.get('success', False)
+
+    def remove_user_from_group(self, user_id: str, group_id: int) -> bool:
+        sql = f"""
+        DELETE FROM hpjy_cggamestuidio.hpjy_user_group_rel
+        WHERE user_id = '{user_id}' AND group_id = {group_id}
+        """
+        result = MysqlService.post(sql)
+        return result.get('success', False)
+
+    def get_all_users(self, force_refresh: bool = False) -> List[str]:
+        import time
+        CACHE_EXPIRE_SECONDS = 300
+        current_time = time.time()
+        if (not force_refresh and
+                self._users_cache is not None and
+                (current_time - self._users_cache_time) < CACHE_EXPIRE_SECONDS):
+            return self._users_cache
+
+        from src.core.services import MysqlService
+        sql = """
+        SELECT DISTINCT user_id
+        FROM hpjy_cggamestuidio.hpjy_user_group_rel
+        ORDER BY user_id
+        """
+        result = MysqlService.get(sql)
+        users = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                users.append(row['user_id'])
+
+        self._users_cache = users
+        self._users_cache_time = current_time
+
+        return users
+
+    def get_third_party_permissions(self) -> List[ThirdPartyPermission]:
+        sql = """
+        SELECT ID, typename, type, jumpurl
+        FROM hpjy_cggamestuidio.hpjy_apply_permission
+        ORDER BY ID
+        """
+        result = MysqlService.get(sql)
+        permissions = []
+        if result.get('success'):
+            for row in result.get('data', []):
+                permissions.append(ThirdPartyPermission(
+                    id=row['ID'],
+                    typename=row['typename'],
+                    type=row['type'],
+                    jumpurl=row['jumpurl']
+                ))
+        return permissions

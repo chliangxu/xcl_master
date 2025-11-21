@@ -1,0 +1,5 @@
+class ProjectEvents:
+    INSTALL_DEV_TOOLS = "install_dev_tools"
+    CHECK_TOOLS_VERSION = "check_tools_version"
+    UPDATE_TOOLS_VERSION = "update_tools_version"
+    DOWNLOAD_TOOLS_PROGRESS = "download_tools_progress"
